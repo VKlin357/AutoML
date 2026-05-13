@@ -1,0 +1,100 @@
+{
+  "trials": [
+    {
+      "trial_id": 0,
+      "primary": 0.9661722252061747,
+      "metrics": {
+        "auc": 0.9661722252061747,
+        "logloss": 0.21934144454886148,
+        "acc": 0.9105280861083082,
+        "balanced_acc": 0.8929051645967592,
+        "search_score": 0.9630976646851087,
+        "primary": 0.9661722252061747
+      },
+      "rung": "full",
+      "n_params": 89102,
+      "arch_family": "mlp",
+      "config": {
+        "preprocess": {
+          "num_encoder": "none",
+          "cat_encoder": "embedding"
+        },
+        "arch": {
+          "family": "mlp",
+          "hidden_dims": [
+            221,
+            141,
+            84,
+            104,
+            108,
+            117
+          ],
+          "activation": "relu",
+          "dropout": 0.0179,
+          "normalization": "batchnorm",
+          "embedding_dim": 18
+        },
+        "train": {
+          "optimizer": "sgd_momentum",
+          "lr": 0.00064,
+          "weight_decay": 0.001028,
+          "scheduler": "none",
+          "batch_size": 256,
+          "epochs": 124,
+          "patience": 21,
+          "label_smoothing": 0.0556,
+          "grad_clip": 4.347,
+          "use_amp": false,
+          "feature_noise_std": 0.0319,
+          "mixup_alpha": 0.169
+        }
+      },
+      "seconds": 278.21591114997864
+    },
+    {
+      "trial_id": 1,
+      "primary": 0.9869051970796507,
+      "metrics": {
+        "auc": 0.9869051970796507,
+        "logloss": 0.13113299033615392,
+        "acc": 0.9503627889097113,
+        "balanced_acc": 0.9398606655515732,
+        "search_score": 0.9850687610083823,
+        "primary": 0.9869051970796507
+      },
+      "rung": "full",
+      "n_params": 351793,
+      "arch_family": "resmlp",
+      "config": {
+        "preprocess": {
+          "num_encoder": "quantile",
+          "cat_encoder": "embedding"
+        },
+        "arch": {
+          "family": "resmlp",
+          "n_blocks": 6,
+          "block_width": 168,
+          "dropout": 0.0464,
+          "activation": "relu",
+          "normalization": "layernorm",
+          "embedding_dim": 58
+        },
+        "train": {
+          "optimizer": "adam",
+          "lr": 0.000647,
+          "weight_decay": 0.001283,
+          "scheduler": "cosine",
+          "batch_size": 1024,
+          "epochs": 30,
+          "patience": 20,
+          "label_smoothing": 0.0586,
+          "grad_clip": 3.143,
+          "use_amp": false,
+          "feature_noise_std": 0.0723,
+          "mixup_alpha": 0.0769
+        }
+      },
+      "seconds": 138.5080761909485
+    }
+  ]
+}
