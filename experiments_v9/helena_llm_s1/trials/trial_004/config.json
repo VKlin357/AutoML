@@ -1,0 +1,29 @@
+{
+  "preprocess": {
+    "num_encoder": "quantile",
+    "cat_encoder": "onehot"
+  },
+  "arch": {
+    "family": "resmlp",
+    "n_blocks": 5,
+    "block_width": 600,
+    "dropout": 0.45,
+    "activation": "leaky_relu",
+    "normalization": "batchnorm",
+    "embedding_dim": 64
+  },
+  "train": {
+    "optimizer": "adam",
+    "lr": 0.0001,
+    "weight_decay": 0.005,
+    "scheduler": "onecycle",
+    "batch_size": 128,
+    "epochs": 150,
+    "patience": 25,
+    "label_smoothing": 0.0,
+    "grad_clip": 0.5,
+    "use_amp": false,
+    "feature_noise_std": 0.0,
+    "mixup_alpha": 0.0
+  }
+}

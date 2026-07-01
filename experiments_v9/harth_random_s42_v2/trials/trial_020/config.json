@@ -1,0 +1,31 @@
+{
+  "preprocess": {
+    "num_encoder": "quantile",
+    "cat_encoder": "embedding"
+  },
+  "arch": {
+    "family": "mlp",
+    "hidden_dims": [
+      87,
+      64
+    ],
+    "activation": "leaky_relu",
+    "dropout": 0.3668,
+    "normalization": "batchnorm",
+    "embedding_dim": 33
+  },
+  "train": {
+    "optimizer": "adam",
+    "lr": 0.004554,
+    "weight_decay": 0.001068,
+    "scheduler": "none",
+    "batch_size": 1024,
+    "epochs": 112,
+    "patience": 10,
+    "label_smoothing": 0.0295,
+    "grad_clip": 3.438,
+    "use_amp": false,
+    "feature_noise_std": 0.1721,
+    "mixup_alpha": 0.3542
+  }
+}

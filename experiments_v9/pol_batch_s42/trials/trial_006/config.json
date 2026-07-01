@@ -1,0 +1,30 @@
+{
+  "preprocess": {
+    "num_encoder": "standard",
+    "cat_encoder": "onehot"
+  },
+  "arch": {
+    "family": "autoint",
+    "n_blocks": 1,
+    "d_token": 44,
+    "n_heads": 4,
+    "attn_dropout": 0.0723,
+    "ffn_factor": 2.135,
+    "ffn_dropout": 0.2363,
+    "activation": "gelu"
+  },
+  "train": {
+    "optimizer": "adamw",
+    "lr": 0.008589,
+    "weight_decay": 0.0,
+    "scheduler": "none",
+    "batch_size": 256,
+    "epochs": 77,
+    "patience": 19,
+    "label_smoothing": 0.1745,
+    "grad_clip": 2.116,
+    "use_amp": true,
+    "feature_noise_std": 0.1079,
+    "mixup_alpha": 0.292
+  }
+}

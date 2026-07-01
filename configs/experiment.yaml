@@ -1,0 +1,29 @@
+# Hydra / OmegaConf experiment config.
+# Load with OmegaConf, or drive DVC via params.yaml (same keys).
+defaults:
+  - _self_
+
+experiment:
+  name: llm_nas
+  seed: 42
+
+data:
+  openml_id: 41168        # Jannis
+  split: [0.64, 0.16, 0.20]
+
+search:
+  budget: 40              # full trainings allowed
+  warmup: 12              # random warm-start trials
+  n_candidates: 20        # LLM proposals per step
+  cheap_epochs: 5         # multi-fidelity proxy
+  cheap_frac: 0.30        # fraction of data for the cheap screen
+  reflect_every: 8        # steps between Reflect updates
+  ensemble_k: 7           # greedy (Caruana) ensemble size
+
+llm:
+  model: gpt-4o-mini
+  temperature: 0.7
+
+tracking:
+  backend: none           # none | mlflow | wandb | clearml | tensorboard
+  project: llm-tabular-nas

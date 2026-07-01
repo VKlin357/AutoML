@@ -56,6 +56,7 @@ CAT_ENCODERS = ("embedding", "onehot")
 
 BATCH_SIZES = (128, 256, 512, 1024)
 
+
 # ---------------------------------------------------------------------------
 # Per-family architecture defaults (used by random sampler / cold start)
 # ---------------------------------------------------------------------------
@@ -139,12 +140,14 @@ TRAIN_BOUNDS: Dict[str, Any] = {
     "mixup_alpha": (0.0, 0.4),
 }
 
+
 # ---------------------------------------------------------------------------
 # Sampling helpers
 # ---------------------------------------------------------------------------
 
 def _sample_int(lo: int, hi: int, rng: random.Random) -> int:
     return rng.randint(int(lo), int(hi))
+
 
 def _sample_log_uniform(lo: float, hi: float, rng: random.Random) -> float:
     if lo <= 0:
@@ -155,15 +158,19 @@ def _sample_log_uniform(lo: float, hi: float, rng: random.Random) -> float:
     a, b = np.log(lo), np.log(hi)
     return float(np.exp(rng.uniform(a, b)))
 
+
 def _sample_uniform(lo: float, hi: float, rng: random.Random) -> float:
     return float(rng.uniform(lo, hi))
+
 
 def _sample_choice(choices, rng: random.Random):
     return rng.choice(list(choices))
 
+
 def _round_div(n: int, d: int) -> int:
     """Round n down to nearest multiple of d (>= d)."""
     return max(d, (n // d) * d)
+
 
 # ---------------------------------------------------------------------------
 # Random samplers per arch family
@@ -187,6 +194,7 @@ def _sample_arch_mlp(rng: random.Random) -> Dict[str, Any]:
         "embedding_dim": _sample_int(*b["embedding_dim"], rng),
     }
 
+
 def _sample_arch_resmlp(rng: random.Random) -> Dict[str, Any]:
     b = ARCH_BOUNDS["resmlp"]
     return {
@@ -198,6 +206,7 @@ def _sample_arch_resmlp(rng: random.Random) -> Dict[str, Any]:
         "normalization": _sample_choice(b["normalization"], rng),
         "embedding_dim": _sample_int(*b["embedding_dim"], rng),
     }
+
 
 def _sample_arch_ftt(rng: random.Random) -> Dict[str, Any]:
     b = ARCH_BOUNDS["ft_transformer"]
@@ -215,6 +224,7 @@ def _sample_arch_ftt(rng: random.Random) -> Dict[str, Any]:
         "activation": _sample_choice(b["activation"], rng),
     }
 
+
 def _sample_arch_gated(rng: random.Random) -> Dict[str, Any]:
     b = ARCH_BOUNDS["gated_tab"]
     return {
@@ -226,6 +236,7 @@ def _sample_arch_gated(rng: random.Random) -> Dict[str, Any]:
         "normalization": _sample_choice(b["normalization"], rng),
         "embedding_dim": _sample_int(*b["embedding_dim"], rng),
     }
+
 
 def _sample_arch_autoint(rng: random.Random) -> Dict[str, Any]:
     b = ARCH_BOUNDS["autoint"]
@@ -242,6 +253,7 @@ def _sample_arch_autoint(rng: random.Random) -> Dict[str, Any]:
         "activation": _sample_choice(b["activation"], rng),
     }
 
+
 def _sample_arch_tabm(rng: random.Random) -> Dict[str, Any]:
     b = ARCH_BOUNDS["tabm"]
     return {
@@ -256,6 +268,7 @@ def _sample_arch_tabm(rng: random.Random) -> Dict[str, Any]:
         "embedding_dim": _sample_int(*b["embedding_dim"], rng),
     }
 
+
 _ARCH_SAMPLERS: Dict[str, Callable[[random.Random], Dict[str, Any]]] = {
     "mlp": _sample_arch_mlp,
     "resmlp": _sample_arch_resmlp,
@@ -265,9 +278,11 @@ _ARCH_SAMPLERS: Dict[str, Callable[[random.Random], Dict[str, Any]]] = {
     "autoint": _sample_arch_autoint,
 }
 
+
 def sample_random_arch(rng: random.Random, family: str | None = None) -> Dict[str, Any]:
     fam = family or _sample_choice(ARCH_FAMILIES, rng)
     return _ARCH_SAMPLERS[fam](rng)
+
 
 def sample_random_train(rng: random.Random) -> Dict[str, Any]:
     b = TRAIN_BOUNDS
@@ -286,11 +301,13 @@ def sample_random_train(rng: random.Random) -> Dict[str, Any]:
         "mixup_alpha": round(_sample_uniform(*b["mixup_alpha"], rng), 4),
     }
 
+
 def sample_random_preprocess(rng: random.Random) -> Dict[str, Any]:
     return {
         "num_encoder": _sample_choice(PREPROCESS_BOUNDS["num_encoder"], rng),
         "cat_encoder": _sample_choice(PREPROCESS_BOUNDS["cat_encoder"], rng),
     }
+
 
 def sample_random_config(rng: random.Random, family: str | None = None) -> Dict[str, Any]:
     return {
@@ -299,6 +316,7 @@ def sample_random_config(rng: random.Random, family: str | None = None) -> Dict[
         "train": sample_random_train(rng),
     }
 
+
 # ---------------------------------------------------------------------------
 # Validation / clamping
 # ---------------------------------------------------------------------------
@@ -306,10 +324,12 @@ def sample_random_config(rng: random.Random, family: str | None = None) -> Dict[
 def _clip(v, lo, hi):
     return max(lo, min(hi, v))
 
+
 def _coerce_choice(v, choices, default):
     if v in choices:
         return v
     return default
+
 
 def _validate_arch(arch: Dict[str, Any]) -> Dict[str, Any]:
     fam = arch.get("family")
@@ -385,6 +405,7 @@ def _validate_arch(arch: Dict[str, Any]) -> Dict[str, Any]:
         a["embedding_dim"] = int(_clip(int(a.get("embedding_dim", 16)), *b["embedding_dim"]))
     return a
 
+
 def _validate_train(t: Dict[str, Any]) -> Dict[str, Any]:
     b = TRAIN_BOUNDS
     out = dict(t or {})
@@ -405,11 +426,13 @@ def _validate_train(t: Dict[str, Any]) -> Dict[str, Any]:
     out["mixup_alpha"] = float(_clip(float(out.get("mixup_alpha", 0.0)), *b["mixup_alpha"]))
     return out
 
+
 def _validate_preprocess(p: Dict[str, Any]) -> Dict[str, Any]:
     out = dict(p or {})
     out["num_encoder"] = _coerce_choice(out.get("num_encoder"), PREPROCESS_BOUNDS["num_encoder"], "standard")
     out["cat_encoder"] = _coerce_choice(out.get("cat_encoder"), PREPROCESS_BOUNDS["cat_encoder"], "embedding")
     return out
+
 
 def validate_config(cfg: Dict[str, Any]) -> Dict[str, Any]:
     """Clamp + coerce; never throws on bounds. Throws only on missing required arch.family."""
@@ -419,6 +442,7 @@ def validate_config(cfg: Dict[str, Any]) -> Dict[str, Any]:
         "train": _validate_train(cfg.get("train", {})),
     }
     return out
+
 
 # ---------------------------------------------------------------------------
 # Mutation / Crossover
@@ -443,11 +467,13 @@ _NUMERIC_MUTATIONS: Dict[str, Tuple[str, Tuple]] = {
     "preprocess.cat_encoder":   ("choice", PREPROCESS_BOUNDS["cat_encoder"]),
 }
 
+
 def _get(d: Dict, path: str):
     cur = d
     for p in path.split("."):
         cur = cur[p]
     return cur
+
 
 def _set(d: Dict, path: str, val):
     parts = path.split(".")
@@ -456,16 +482,20 @@ def _set(d: Dict, path: str, val):
         cur = cur[p]
     cur[parts[-1]] = val
 
+
 def _perturb_log(v: float, lo: float, hi: float, rng: random.Random) -> float:
     factor = float(np.exp(rng.uniform(-0.7, 0.7)))   # ~ x0.5 .. x2
     return float(_clip(v * factor, lo, hi))
+
 
 def _perturb_uni(v: float, lo: float, hi: float, rng: random.Random) -> float:
     span = hi - lo
     return float(_clip(v + rng.uniform(-0.15 * span, 0.15 * span), lo, hi))
 
+
 def _perturb_int(v: int, lo: int, hi: int, rng: random.Random) -> int:
     return int(_clip(v + rng.choice([-2, -1, 1, 2]), lo, hi))
+
 
 def mutate_random(cfg: Dict[str, Any], rng: random.Random, n_changes: int = 1) -> Dict[str, Any]:
     """Apply a small random mutation to ``cfg`` (without using LLM).
@@ -494,6 +524,7 @@ def mutate_random(cfg: Dict[str, Any], rng: random.Random, n_changes: int = 1) -
         elif kind == "bool":
             _set(out, path, not bool(v))
     return validate_config(out)
+
 
 def _mutate_arch_random(arch: Dict[str, Any], rng: random.Random) -> Dict[str, Any]:
     """Mutate inside one architecture family OR jump to a different family (rare)."""
@@ -600,6 +631,7 @@ def _mutate_arch_random(arch: Dict[str, Any], rng: random.Random) -> Dict[str, A
                                              *b["embedding_dim"]))
     return out
 
+
 def crossover(parent_a: Dict[str, Any], parent_b: Dict[str, Any], rng: random.Random) -> Dict[str, Any]:
     """Sub-tree crossover: independently sample {preprocess, arch, train} from either parent."""
     child = {
@@ -608,6 +640,7 @@ def crossover(parent_a: Dict[str, Any], parent_b: Dict[str, Any], rng: random.Ra
         "train":      copy.deepcopy(parent_a["train"]      if rng.random() < 0.5 else parent_b["train"]),
     }
     return validate_config(child)
+
 
 # ---------------------------------------------------------------------------
 # Featurization for surrogate model
@@ -689,6 +722,7 @@ def featurize_config(cfg: Dict[str, Any]) -> Dict[str, float]:
 
     return feats
 
+
 # ---------------------------------------------------------------------------
 # Distance (for diversity penalty)
 # ---------------------------------------------------------------------------
@@ -711,7 +745,9 @@ def config_distance(a: Dict[str, Any], b: Dict[str, Any]) -> float:
         n += 1
     return float(s / max(n, 1))
 
+
 # ---------------------------------------------------------------------------
+# Compact JSON-Schema-like description for the LLM prompt
 # ---------------------------------------------------------------------------
 
 def schema_for_prompt() -> Dict[str, Any]:

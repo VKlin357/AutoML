@@ -1,18 +1,97 @@
+# Python
 __pycache__/
-*.pyc
-*.pyo
-.env
-*.pt
-*.pkl
-catboost_info/
-experiments_*/
-outputs/
-logs/
-runs/
-*.log
-*.pid
-*.aux
-*.toc
-*.pdf
-*.zip
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.ipynb_checkpoints/
+
+# OS / editor
 .DS_Store
+*.swp
+
+# Secrets
+.env
+*.key
+
+# Heavy / generated artifacts (keep aggregated results/ and committed logs)
+catboost_info/
+*.pid
+*.tmp
+outputs/
+runs/
+session-export-*/
+
+# LaTeX build
+*.aux
+*.log
+*.toc
+*.out
+
+# experiment tracking (local)
+tracking/
+mlruns/
+outputs/demo_report.json
+
+# ── Product-repo hygiene: keep code, exclude deliverables / scratch / heavy logs ──
+# Deliverables (live on disk, not in the code repo)
+*.pptx
+*.pdf
+*.docx
+diploma_thesis.*
+title_vkr.tex
+
+# Scratch / dumps / dev notes
+AGENTS.md
+PROJECT_CODE_DUMP_*.md
+all_code.txt
+all_v9_jsons.txt
+classic_nas_translations_ru.md
+paper_translations_ru.md
+dirs_hv.txt
+table_results.txt
+speech*.md
+CHANGELOG_FIXES.md
+CHANGELOG_V3.md
+CHANGELOG_V5.md
+
+# Loose images / archives at repo root
+/*.png
+/*.jpg
+/*.jpeg
+figures.zip
+
+# Model weights / heavy binaries (keep JSON logs, not the checkpoints)
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.pkl
+*.joblib
+*.npy
+*.npz
+
+# Runtime logs / pids / junk
+*_log.txt
+*.pid
+test_write.tmp
+/test_llm.py
+/test_raw.py
+
+# Heavy / superseded directories (kept on disk, not in repo)
+github_release/
+catboost_info/
+notebooks/
+figures/
+plots/
+logs/
+logs_harth/
+experiments/
+experiments_test/
+experiments_v2/
+experiments_v3/
+experiments_v4/
+experiments_v5/
+experiments_v6/
+experiments_v7/
+experiments_v8/

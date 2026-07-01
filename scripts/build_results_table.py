@@ -1,0 +1,182 @@
+#!/usr/bin/env python3
+"""Build the canonical LLM-NAS vs baselines results table from raw outputs.
+
+Single source of truth for every number quoted in README.md and the project
+report. No metric is hard-coded here: the script reads the per-experiment JSON
+artifacts each run writes to disk, so the tables can always be regenerated:
+
+    python scripts/build_results_table.py
+
+Outputs (in results/):
+    results_classification.csv
+    results_forecasting.csv
+    results_tables.md
+"""
+from __future__ import annotations
+
+import csv
+import json
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+V9 = ROOT / "experiments_v9"
+FC = ROOT / "experiments_forecasting"
+OUT = ROOT / "results"
+OUT.mkdir(exist_ok=True)
+
+DISPLAY = {
+    "adult": "Adult",
+    "helena": "Helena",
+    "jannis": "Jannis",
+    "miniboonee": "MiniBooNE",
+    "volkert": "Volkert",
+}
+
+LLM_SUFFIXES = ["_llm_nas", "_batch_s42", "_llm_s42"]
+
+
+def load(path: Path):
+    try:
+        return json.loads(path.read_text())
+    except (FileNotFoundError, json.JSONDecodeError):
+        return None
+
+
+def first(d, *keys):
+    if not d:
+        return None
+    for k in keys:
+        if isinstance(d, dict) and d.get(k) is not None:
+            return d[k]
+    return None
+
+
+def collect_llm():
+    out: dict[str, dict] = {}
+    for suf in LLM_SUFFIXES:
+        for d in sorted(V9.glob(f"*{suf}")):
+            if not d.is_dir():
+                continue
+            ds = d.name[: -len(suf)]
+            if ds not in DISPLAY or ds in out:
+                continue
+            fr = load(d / "final_report.json")
+            er = load(d / "ensemble_report.json")
+            single = first(fr, "best_primary")
+            ensemble = first(er, "best_ensemble") or first(fr, "best_ensemble")
+            if single is None and ensemble is None:
+                continue
+            out[ds] = {
+                "single": single,
+                "ensemble": ensemble,
+                "family": first(fr, "best_primary_family"),
+            }
+    return out
+
+
+def collect_baselines():
+    out: dict[str, dict] = {}
+    for d in sorted(V9.glob("*_baselines")):
+        ds = d.name[: -len("_baselines")].replace("_rerun", "")
+        if ds not in DISPLAY:
+            continue
+        row = out.setdefault(ds, {})
+        for name, fname in [
+            ("catboost", "baseline_catboost.json"),
+            ("lightgbm", "baseline_lightgbm.json"),
+            ("random_nas", "baseline_random_search.json"),
+            ("optuna", "baseline_optuna.json"),
+        ]:
+            j = load(d / fname)
+            v = first(j, "test_primary", "primary")
+            if v is not None:
+                row[name] = v
+    return out
+
+
+def fmt(x):
+    return f"{x:.4f}" if isinstance(x, (int, float)) else "-"
+
+
+def build_classification():
+    llm, base = collect_llm(), collect_baselines()
+    rows = []
+    for ds, disp in DISPLAY.items():
+        l, b = llm.get(ds, {}), base.get(ds, {})
+        rows.append({
+            "dataset": disp,
+            "catboost": b.get("catboost"),
+            "lightgbm": b.get("lightgbm"),
+            "random_nas": b.get("random_nas"),
+            "optuna": b.get("optuna"),
+            "llm_nas_single": l.get("single"),
+            "llm_nas_ensemble": l.get("ensemble"),
+            "best_family": l.get("family"),
+        })
+    return rows
+
+
+def build_forecasting():
+    rows = []
+    for d in sorted(FC.iterdir()):
+        rs = load(d / "results_summary.json")
+        if not rs:
+            continue
+
+        def best(prefixes):
+            vals = [
+                first(v, "test_mse")
+                for k, v in rs.items()
+                if isinstance(v, dict) and any(k.startswith(p) for p in prefixes)
+            ]
+            vals = [x for x in vals if isinstance(x, (int, float))]
+            return min(vals) if vals else None
+
+        cb = best(["catboost"])
+        lgb = best(["lightgbm"])
+        llm = best(["llm", "nas", "best"])
+        if cb is None and llm is None:
+            continue
+        rows.append({"dataset": d.name, "catboost_mse": cb, "lightgbm_mse": lgb, "llm_nas_mse": llm})
+    return rows
+
+
+def write_csv(path, rows):
+    if not rows:
+        return
+    with open(path, "w", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
+        w.writeheader()
+        for r in rows:
+            w.writerow({k: (f"{v:.6f}" if isinstance(v, float) else v) for k, v in r.items()})
+
+
+def md_table(headers, rows):
+    out = ["| " + " | ".join(headers) + " |", "| " + " | ".join("---" for _ in headers) + " |"]
+    out += ["| " + " | ".join(r) + " |" for r in rows]
+    return "\n".join(out)
+
+
+def main():
+    cls = build_classification()
+    fc = build_forecasting()
+    write_csv(OUT / "results_classification.csv", cls)
+    write_csv(OUT / "results_forecasting.csv", fc)
+
+    md = ["# Aggregated results (auto-generated by scripts/build_results_table.py)\n",
+          "## Classification — accuracy on the untouched test split, budget = 40 full trials\n",
+          md_table(
+              ["Dataset", "CatBoost", "LightGBM", "Random NAS", "Optuna TPE", "LLM-NAS", "LLM-NAS ens.", "Best family"],
+              [[r["dataset"], fmt(r["catboost"]), fmt(r["lightgbm"]), fmt(r["random_nas"]),
+                fmt(r["optuna"]), fmt(r["llm_nas_single"]), fmt(r["llm_nas_ensemble"]),
+                str(r["best_family"] or "-")] for r in cls]),
+          "\n## Forecasting — test MSE (lower is better)\n",
+          md_table(
+              ["Dataset", "CatBoost", "LightGBM", "LLM-NAS"],
+              [[r["dataset"], fmt(r["catboost_mse"]), fmt(r["lightgbm_mse"]), fmt(r["llm_nas_mse"])] for r in fc])]
+    (OUT / "results_tables.md").write_text("\n".join(md) + "\n")
+    print((OUT / "results_tables.md").read_text())
+
+
+if __name__ == "__main__":
+    main()

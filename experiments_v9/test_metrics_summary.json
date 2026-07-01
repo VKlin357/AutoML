@@ -1,0 +1,7 @@
+{
+  "harth_llm_s42_v2": {
+    "val_primary": 0.92731425091352,
+    "test_primary": 0.8351057747284162,
+    "status": "computed"
+  }
+}

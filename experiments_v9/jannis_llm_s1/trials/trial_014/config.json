@@ -1,0 +1,31 @@
+{
+  "preprocess": {
+    "num_encoder": "standard",
+    "cat_encoder": "embedding"
+  },
+  "arch": {
+    "family": "mlp",
+    "hidden_dims": [
+      128,
+      128
+    ],
+    "dropout": 0.45,
+    "activation": "relu",
+    "normalization": "layernorm",
+    "embedding_dim": 8
+  },
+  "train": {
+    "optimizer": "adamw",
+    "lr": 0.00300752,
+    "weight_decay": 1e-05,
+    "scheduler": "cosine",
+    "batch_size": 1024,
+    "epochs": 200,
+    "patience": 15,
+    "label_smoothing": 0.0,
+    "grad_clip": 0.0,
+    "use_amp": true,
+    "feature_noise_std": 0.1,
+    "mixup_alpha": 0.3
+  }
+}

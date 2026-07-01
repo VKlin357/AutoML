@@ -1,0 +1,12 @@
+{
+  "auc": 0.9104802939602326,
+  "auc_defined": true,
+  "logloss": 0.3137016258386711,
+  "acc": 0.855790147152911,
+  "balanced_acc": 0.7837028824833703,
+  "search_score": 0.9037389144683688,
+  "primary": 0.9104802939602326,
+  "rung": "medium_pruned",
+  "cheap_primary": 0.9041518284812204,
+  "cheap_search_score": 0.8971260054473031
+}

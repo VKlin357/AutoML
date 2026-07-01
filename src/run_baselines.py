@@ -11,6 +11,7 @@ Usage examples:
   # Just CatBoost + LightGBM
   python scripts/run_baselines.py --openml_id 40981 --out_dir runs/helena
 
+  # Full comparison including Optuna (match --optuna_trials to your LLM-NAS budget)
   python scripts/run_baselines.py --openml_id 40981 --out_dir runs/helena \\
       --optuna --optuna_trials 25 --random_nas
 
@@ -28,6 +29,7 @@ if ROOT not in sys.path:
 
 from src.run_baselines_core import run_baselines
 
+
 def main():
     ap = argparse.ArgumentParser(description="Baseline runner: CatBoost + LightGBM + Optuna + Random NAS")
 
@@ -35,7 +37,8 @@ def main():
     ap.add_argument("--openml_id", type=int, default=None,
                     help="OpenML dataset ID (e.g. 40981=helena, 41150=MiniBooNE)")
     ap.add_argument("--builtin", default=None,
-                    choices=["covtype", "california_housing", "miniboonee"],
+                    choices=["covtype", "california_housing", "miniboonee",
+                             "ecg5000", "har", "harth", "pamap2", "elec2", "emg_gestures"],
                     help="Built-in dataset (no OpenML download needed)")
     ap.add_argument("--csv", default=None,
                     help="Path to CSV file (last column = target)")
@@ -61,6 +64,8 @@ def main():
                     help="Hard wall-clock cap for Optuna in seconds (default: 1 hour)")
 
     ap.add_argument("--device", default=None, help="cuda / cpu (auto-detected if omitted)")
+    ap.add_argument("--ts_features", action="store_true",
+                    help="Apply time-series feature engineering (stats, FFT, diffs) before CatBoost/LightGBM")
     args = ap.parse_args()
 
     # Resolve data source
@@ -88,6 +93,7 @@ def main():
         source=source,
         builtin_name=builtin_name,
         csv_path=csv_path,
+        ts_dataset=args.builtin if args.ts_features else None,
     )
 
     # Optuna — called separately from baselines_automl to keep run_baselines_core clean
@@ -106,6 +112,7 @@ def main():
             csv_path=csv_path,
             device=args.device,
         )
+
 
 if __name__ == "__main__":
     main()

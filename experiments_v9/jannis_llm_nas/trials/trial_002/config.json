@@ -1,0 +1,29 @@
+{
+  "preprocess": {
+    "num_encoder": "standard",
+    "cat_encoder": "onehot"
+  },
+  "arch": {
+    "family": "resmlp",
+    "n_blocks": 5,
+    "block_width": 528,
+    "dropout": 0.3178,
+    "activation": "silu",
+    "normalization": "batchnorm",
+    "embedding_dim": 27
+  },
+  "train": {
+    "optimizer": "adam",
+    "lr": 4.3e-05,
+    "weight_decay": 0.036023,
+    "scheduler": "cosine",
+    "batch_size": 256,
+    "epochs": 146,
+    "patience": 26,
+    "label_smoothing": 0.049,
+    "grad_clip": 2.311,
+    "use_amp": true,
+    "feature_noise_std": 0.1851,
+    "mixup_alpha": 0.2753
+  }
+}

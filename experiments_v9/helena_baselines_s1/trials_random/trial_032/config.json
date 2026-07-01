@@ -1,0 +1,30 @@
+{
+  "preprocess": {
+    "num_encoder": "standard",
+    "cat_encoder": "embedding"
+  },
+  "arch": {
+    "family": "mlp",
+    "hidden_dims": [
+      40
+    ],
+    "activation": "leaky_relu",
+    "dropout": 0.1917,
+    "normalization": "layernorm",
+    "embedding_dim": 58
+  },
+  "train": {
+    "optimizer": "sgd_momentum",
+    "lr": 7.3e-05,
+    "weight_decay": 0.0,
+    "scheduler": "onecycle",
+    "batch_size": 256,
+    "epochs": 17,
+    "patience": 3,
+    "label_smoothing": 0.0775,
+    "grad_clip": 4.382,
+    "use_amp": false,
+    "feature_noise_std": 0.1129,
+    "mixup_alpha": 0.1017
+  }
+}

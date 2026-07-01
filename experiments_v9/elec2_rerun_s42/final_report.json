@@ -1,0 +1,181 @@
+{
+  "dataset": {
+    "openml_id": 44156,
+    "name": "electricity",
+    "n_rows": 38474,
+    "n_features": 8,
+    "n_num": 7,
+    "n_cat": 1,
+    "task": "binary",
+    "n_classes": 2,
+    "n_train": 24623,
+    "n_val": 6156,
+    "n_test": 7695,
+    "num_cols_preview": [
+      "date",
+      "period",
+      "nswprice",
+      "nswdemand",
+      "vicprice",
+      "vicdemand",
+      "transfer"
+    ],
+    "cat_cols_preview": [
+      "day"
+    ],
+    "class_balance": {
+      "0": 12311,
+      "1": 12312
+    },
+    "feature_stats": {
+      "date": {
+        "mean": 0.4979,
+        "std": 0.3401,
+        "min": 0.0,
+        "max": 1.0,
+        "median": 0.4563
+      },
+      "period": {
+        "mean": 0.5057,
+        "std": 0.291,
+        "min": 0.0,
+        "max": 1.0,
+        "median": 0.5106
+      },
+      "nswprice": {
+        "mean": 0.06,
+        "std": 0.0415,
+        "min": 0.0,
+        "max": 1.0,
+        "median": 0.0512
+      },
+      "nswdemand": {
+        "mean": 0.4328,
+        "std": 0.1619,
+        "min": 0.0,
+        "max": 1.0,
+        "median": 0.4502
+      },
+      "vicprice": {
+        "mean": 0.0035,
+        "std": 0.0099,
+        "min": 0.0,
+        "max": 1.0,
+        "median": 0.0035
+      },
+      "vicdemand": {
+        "mean": 0.4262,
+        "std": 0.1213,
+        "min": 0.0,
+        "max": 1.0,
+        "median": 0.4229
+      },
+      "transfer": {
+        "mean": 0.497,
+        "std": 0.1525,
+        "min": 0.0,
+        "max": 0.9579,
+        "median": 0.4149
+      }
+    },
+    "categorical_stats": {
+      "day": {
+        "n_unique": 7,
+        "top5": {
+          "0": 3635,
+          "1": 3575,
+          "5": 3522,
+          "2": 3508,
+          "3": 3480
+        }
+      }
+    },
+    "class_distribution": {
+      "0": 0.5,
+      "1": 0.5
+    },
+    "class_imbalance_ratio": 1.0,
+    "sample_rows": [
+      {
+        "date": 0.0094,
+        "day": "5",
+        "period": 0.2766,
+        "nswprice": 0.0416,
+        "nswdemand": 0.2618,
+        "vicprice": 0.0035,
+        "vicdemand": 0.4229,
+        "transfer": 0.4149
+      },
+      {
+        "date": 0.4608,
+        "day": "0",
+        "period": 0.8511,
+        "nswprice": 0.0334,
+        "nswdemand": 0.4708,
+        "vicprice": 0.0023,
+        "vicdemand": 0.319,
+        "transfer": 0.2605
+      },
+      {
+        "date": 0.4567,
+        "day": "5",
+        "period": 0.0213,
+        "nswprice": 0.034,
+        "nswdemand": 0.5129,
+        "vicprice": 0.0023,
+        "vicdemand": 0.4347,
+        "transfer": 0.6579
+      },
+      {
+        "date": 0.0043,
+        "day": "1",
+        "period": 0.4255,
+        "nswprice": 0.0468,
+        "nswdemand": 0.5559,
+        "vicprice": 0.0035,
+        "vicdemand": 0.4229,
+        "transfer": 0.4149
+      },
+      {
+        "date": 0.4693,
+        "day": "5",
+        "period": 1.0,
+        "nswprice": 0.0425,
+        "nswdemand": 0.3791,
+        "vicprice": 0.0028,
+        "vicdemand": 0.3408,
+        "transfer": 0.5219
+      }
+    ]
+  },
+  "mode": "batch",
+  "seed": 42,
+  "n_trials": 40,
+  "n_full_trials": 31,
+  "best_primary": 0.939308644508535,
+  "validation_best_primary": 0.939308644508535,
+  "best_primary_trial_id": 32,
+  "best_primary_family": "resmlp",
+  "best_search_score": 0.9360369090151541,
+  "best_search_trial_id": 32,
+  "selected_single_test": {
+    "test_primary": 0.9366783226609066,
+    "val_primary": 0.939308644508535,
+    "test_metrics": {
+      "auc": 0.9366783226609066,
+      "auc_defined": true,
+      "logloss": 0.33972084395854757,
+      "acc": 0.8583495776478233,
+      "balanced_acc": 0.858351973376668,
+      "search_score": 0.9332812340077633,
+      "primary": 0.9366783226609066
+    },
+    "evaluation_split": "test",
+    "selection_split": "validation"
+  },
+  "test_primary": 0.9366783226609066,
+  "evaluation_protocol": "select_on_validation_report_on_test",
+  "best_ensemble": null,
+  "ensemble_k": null,
+  "ensemble": {}
+}

@@ -1,0 +1,15 @@
+cff-version: 1.2.0
+message: "If you use this work, please cite it as below."
+title: "LLM-guided Neural Architecture Search for Tabular Data"
+authors:
+  - family-names: Palysaev
+    given-names: Vadim
+year: 2025
+type: thesis
+repository-code: "https://github.com/VKlin357/AutoML"
+keywords:
+  - neural architecture search
+  - large language models
+  - tabular data
+  - AutoML
+license: MIT

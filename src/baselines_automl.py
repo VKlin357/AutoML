@@ -17,6 +17,7 @@ import numpy as np
 
 from .utils import ensure_dir, save_json
 
+
 # ---------------------------------------------------------------------------
 # AutoGluon
 # ---------------------------------------------------------------------------
@@ -99,6 +100,7 @@ def run_autogluon_baseline(
     print(f"[AutoGluon] primary={primary:.5f}  ({elapsed:.0f}s, presets={presets})")
     return result
 
+
 # ---------------------------------------------------------------------------
 # LightAutoML
 # ---------------------------------------------------------------------------
@@ -177,6 +179,7 @@ def run_lightautoml_baseline(
     print(f"[LightAutoML] primary={met.primary:.5f}  ({elapsed:.0f}s)")
     return result
 
+
 # ---------------------------------------------------------------------------
 # Optuna baseline
 # ---------------------------------------------------------------------------
@@ -186,7 +189,7 @@ def run_optuna_baseline(
     task: str,
     out_dir: str,
     seed: int = 42,
-    n_trials: int = 25,
+    n_trials: int = 25,          # match LLM-NAS budget for fair comparison
     timeout: int = 3600,         # hard wall-clock cap in seconds
     source: str = "openml",
     builtin_name: Optional[str] = None,
@@ -231,6 +234,7 @@ def run_optuna_baseline(
     )
 
     best_trials_log = []
+    trial_configs = {}
 
     def objective(trial: "optuna.Trial") -> float:
         # ---- preprocess ----
@@ -268,6 +272,22 @@ def run_optuna_baseline(
                 "block_width": block_width,
                 "activation": activation,
                 "dropout": dropout,
+                "normalization": normalization,
+                "embedding_dim": emb_dim,
+            }
+        elif family == "tabm":
+            n_blocks = trial.suggest_int("tabm_n_blocks", 2, 6)
+            width = trial.suggest_int("tabm_width", 128, 1024)
+            k = trial.suggest_int("tabm_k", 4, 16)
+            head_dropout = trial.suggest_float("tabm_head_dropout", 0.0, 0.30)
+            arch_cfg = {
+                "family": "tabm",
+                "n_blocks": n_blocks,
+                "width": width,
+                "k": k,
+                "dropout": dropout,
+                "head_dropout": head_dropout,
+                "activation": activation,
                 "normalization": normalization,
                 "embedding_dim": emb_dim,
             }
@@ -352,7 +372,9 @@ def run_optuna_baseline(
             },
         }
 
+        # Clamp any out-of-range values (same robustness as LLM-NAS pipeline)
         cfg = validate_config(cfg)
+        trial_configs[trial.number] = cfg
 
         try:
             pre = Preprocessor(
@@ -394,23 +416,56 @@ def run_optuna_baseline(
     study = optuna.create_study(direction="maximize", sampler=sampler)
     study.optimize(objective, n_trials=n_trials, timeout=timeout, show_progress_bar=False)
 
-    elapsed = time.time() - t0
     best = study.best_trial
+    best_cfg = trial_configs[best.number]
+    pre = Preprocessor(
+        num_encoder=best_cfg["preprocess"]["num_encoder"],
+        cat_encoder=best_cfg["preprocess"]["cat_encoder"],
+    )
+    prepared = pre.fit_transform(
+        raw.X_train, raw.X_val, raw.X_test,
+        raw.y_train, raw.y_val, raw.y_test,
+        raw.num_cols, raw.cat_cols, raw.task, raw.n_classes,
+    )
+    final_eval = train_trial(
+        cfg=best_cfg,
+        X_train_num=prepared.X_train_num, X_train_cat=prepared.X_train_cat,
+        y_train=prepared.y_train,
+        X_val_num=prepared.X_val_num, X_val_cat=prepared.X_val_cat,
+        y_val=prepared.y_val,
+        X_test_num=prepared.X_test_num, X_test_cat=prepared.X_test_cat,
+        y_test=prepared.y_test,
+        task=prepared.task, n_classes=prepared.n_classes,
+        cat_cardinalities=prepared.cat_cardinalities,
+        seed=seed, save_model=False, device=device,
+        max_epochs=best_cfg["train"]["epochs"],
+    )
+    elapsed = time.time() - t0
     result = {
-        "primary": float(best.value),
+        "primary": float(final_eval.test_primary),
+        "test_primary": float(final_eval.test_primary),
+        "test_metrics": final_eval.test_metrics,
+        "validation_best_primary": float(best.value),
+        "selected_val_primary": float(final_eval.primary),
+        "evaluation_split": "test",
+        "selection_split": "validation",
         "best_params": best.params,
+        "best_config": best_cfg,
         "n_trials_completed": len(study.trials),
         "seconds": elapsed,
         "n_trials_budget": n_trials,
         "trial_log": best_trials_log,
     }
     save_json(ensure_dir(out_dir) / "baseline_optuna.json", result)
-    print(f"[Optuna] best_primary={best.value:.5f}  "
+    print(f"[Optuna] test_primary={final_eval.test_primary:.5f}  "
+          f"validation_best={best.value:.5f}  "
           f"({len(study.trials)} trials, {elapsed:.0f}s)  "
           f"family={best.params.get('family', '?')}")
     return result
 
+
 # ---------------------------------------------------------------------------
+# Naive LLM baseline
 # ---------------------------------------------------------------------------
 
 _NAIVE_LLM_SYSTEM = """\
@@ -479,6 +534,7 @@ Classes: {n_classes}
 
 Propose ONE configuration that you expect to work well for this dataset.
 """
+
 
 def run_naive_llm_baseline(
     openml_id: int,
@@ -552,6 +608,7 @@ def run_naive_llm_baseline(
                 print(f"  [NaiveLLM] trial {trial_idx}: LLM returned invalid JSON, skipping")
                 continue
 
+            # Clamp / coerce out-of-range values to valid ranges (same as LLM-NAS)
             cfg = validate_config(cfg)
 
             num_enc = cfg.get("preprocess", {}).get("num_encoder", "standard")

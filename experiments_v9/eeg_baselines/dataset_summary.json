@@ -1,0 +1,35 @@
+{
+  "openml_id": 1471,
+  "name": "eeg-eye-state",
+  "n_rows": 14980,
+  "n_features": 14,
+  "n_num": 14,
+  "n_cat": 0,
+  "task": "binary",
+  "n_classes": 2,
+  "n_train": 9587,
+  "n_val": 2397,
+  "n_test": 2996,
+  "num_cols_preview": [
+    "V1",
+    "V2",
+    "V3",
+    "V4",
+    "V5",
+    "V6",
+    "V7",
+    "V8",
+    "V9",
+    "V10",
+    "V11",
+    "V12",
+    "V13",
+    "V14"
+  ],
+  "cat_cols_preview": [],
+  "class_balance": {
+    "0": 5285,
+    "1": 4302
+  },
+  "cat_cardinalities_preview": []
+}

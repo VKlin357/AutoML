@@ -1,0 +1,50 @@
+{
+  "trial_id": 3,
+  "op": "random_warmup",
+  "config": {
+    "arch": {
+      "family": "transformer",
+      "patch_size": 8,
+      "d_model": 256,
+      "n_heads": 8,
+      "n_layers": 4,
+      "dropout": 0.05,
+      "ffn_factor": 2.0
+    },
+    "train": {
+      "lr": 0.0003,
+      "batch_size": 128,
+      "epochs": 30,
+      "patience": 10,
+      "optimizer": "adam",
+      "weight_decay": 0.001,
+      "scheduler": "cosine",
+      "grad_clip": 1.0,
+      "use_amp": false
+    }
+  },
+  "primary": -1.5761975049972534,
+  "val_mse": 1.5761975049972534,
+  "val_mae": 1.100433349609375,
+  "test_mse": 1.0231823921203613,
+  "test_mae": 0.9308674335479736,
+  "val_history": [
+    -3.2388811111450195,
+    -1.5761975049972534,
+    -2.0415923595428467,
+    -2.1306164264678955,
+    -2.4537465572357178,
+    -2.0698060989379883,
+    -1.9930046796798706,
+    -2.675868272781372,
+    -1.892873764038086,
+    -1.8827824592590332,
+    -2.4622108936309814,
+    -1.8592541217803955
+  ],
+  "epochs_run": 12,
+  "n_params": 2117377,
+  "seconds": 11.250014305114746,
+  "early_stopped": true,
+  "error": null
+}

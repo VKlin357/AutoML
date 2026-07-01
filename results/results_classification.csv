@@ -1,0 +1,6 @@
+dataset,catboost,lightgbm,random_nas,optuna,llm_nas_single,llm_nas_ensemble,best_family
+Adult,0.928432,0.928454,0.914220,0.914298,0.917631,0.919066,ft_transformer
+Helena,0.372393,0.346626,0.392063,0.395399,0.391584,0.407400,tabm
+Jannis,0.800365,0.792636,0.789423,,0.791707,0.802996,ft_transformer
+MiniBooNE,0.985389,0.985183,,0.987219,0.987524,0.988432,tabm
+Volkert,0.706911,0.695764,,,0.695713,0.724009,tabm

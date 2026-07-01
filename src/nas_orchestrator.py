@@ -86,6 +86,7 @@ from .llm.prompts import (
 from .llm.logger import LLMLogger
 from .llm.actions import apply_action, action_stats, ACTION_NAMES
 
+
 # ---------------------------------------------------------------------------
 # Internal helpers
 # ---------------------------------------------------------------------------
@@ -102,6 +103,7 @@ def _prep_from_cfg(cfg: Dict, raw: RawDataset) -> PreparedSplit:
         raw.y_train, raw.y_val, raw.y_test,
         raw.num_cols, raw.cat_cols, raw.task, raw.n_classes,
     )
+
 
 def _trial_record(trial_id: int, cfg: Dict, result: FidelityResult,
                   op: str = "?", rationale: str = "") -> Dict:
@@ -123,6 +125,7 @@ def _trial_record(trial_id: int, cfg: Dict, result: FidelityResult,
         "grad_norm_history": result.grad_norm_history or [],
     }
 
+
 def _sel_score(trial: Dict) -> float:
     """NAS selection score (dense proxy). Used for: parent selection, surrogate, batch selection.
     Pruned/error trials return -1e18 so they never become best parent."""
@@ -130,12 +133,14 @@ def _sel_score(trial: Dict) -> float:
         return -1e18
     return float(trial.get("search_score", trial.get("primary", -1e18)))
 
+
 def _primary_score(trial: Dict) -> float:
     """Raw accuracy score for final honest comparison with CatBoost/baselines.
     NEVER use this for NAS search decisions — use _sel_score instead."""
     if trial.get("rung") in ("cheap_pruned", "medium_pruned", "error"):
         return -1e18
     return float(trial.get("primary", -1e18))
+
 
 def _learning_curve_summary(trial: Dict) -> Dict:
     """Compact learning curve digest to pass to LLM without flooding context.
@@ -231,6 +236,9 @@ def _learning_curve_summary(trial: Dict) -> Dict:
     if grad_norm_stats:
         summary["grad_norm_stats"] = grad_norm_stats
 
+    # Prong G (per advisor request): add a TEXTUAL NARRATIVE of how the curves
+    # behaved. LLMs reason about text more reliably than about raw arrays.
+    # Pre-digesting the trajectory into a 1-2 sentence summary gives gpt-4o-mini
     # a much easier signal than 10 floats.
     narrative_parts = []
     if trn_h and len(trn_h) >= 3:
@@ -274,6 +282,7 @@ def _learning_curve_summary(trial: Dict) -> Dict:
 
     return summary
 
+
 def _history_for_prompt(trials: List[Dict], top_k: int = 8, recent_k: int = 5,
                         include_curves: bool = True) -> List[Dict]:
     """Compact history: top-K by primary + last recent_k, deduplicated.
@@ -308,11 +317,15 @@ def _history_for_prompt(trials: List[Dict], top_k: int = 8, recent_k: int = 5,
                 entry["learning_curve"] = _learning_curve_summary(t)
             out.append(entry)
 
+    # OPRO finding: ascending order (worst→best) is empirically best.
+    # LLM recency bias means it attends more to the end of the context,
     # so the best trials should appear LAST in the prompt.
     out.sort(key=lambda x: x["primary"])
     return out
 
+
 # ---------------------------------------------------------------------------
+# LLM operator wrappers (with fallback to random)
 # ---------------------------------------------------------------------------
 
 def _cfg_hash(cfg: Dict) -> str:
@@ -320,6 +333,7 @@ def _cfg_hash(cfg: Dict) -> str:
     import hashlib
     s = json.dumps(cfg, sort_keys=True, ensure_ascii=False)
     return hashlib.md5(s.encode()).hexdigest()[:12]
+
 
 def _llm_cold_start_configs(
     llm: ProxyChatOpenAILLM,
@@ -367,6 +381,8 @@ def _llm_cold_start_configs(
             llm.temperature = saved_temp
     return cold_start_random(n, rng)
 
+
+
 def _llm_reflect_hints(
     llm: ProxyChatOpenAILLM,
     history: List[Dict],
@@ -392,6 +408,7 @@ def _llm_reflect_hints(
     except Exception as e:
         print(f"[NAS] LLM reflect failed ({type(e).__name__}: {e}).")
     return {}
+
 
 def _llm_propose_configs(
     llm: OpenAILLM,
@@ -470,6 +487,7 @@ def _llm_propose_configs(
 
     return results[:n]
 
+
 # ---------------------------------------------------------------------------
 # REFINE operator helper (tool-call mode)
 # ---------------------------------------------------------------------------
@@ -528,6 +546,7 @@ def _apply_freeform_changes(parent_cfg: Dict, changes: Dict[str, Any]) -> Dict:
 
     return validate_config(out)
 
+
 def _build_parent_candidates(all_trials: List[Dict], top_k: int = 5) -> List[Dict]:
     """Prong D: pick top-K parents from population for LLM to choose from.
 
@@ -578,6 +597,7 @@ def _build_parent_candidates(all_trials: List[Dict], top_k: int = 5) -> List[Dic
             "curve_summary": curve_short,
         })
     return out
+
 
 def _llm_freeform_step(
     llm: OpenAILLM,
@@ -648,6 +668,7 @@ def _llm_freeform_step(
         from .llm.client import _extract_json
 
         # Freeform validation: retry if history_check too short OR
+        # LLM only touched safe fields 3+ consecutive times in action_history.
         _SAFE_FIELDS = {"train.lr", "train.epochs", "arch.dropout",
                         "train.weight_decay", "train.patience"}
         _STRUCTURAL_FIELDS = {"arch.family", "arch.n_blocks", "arch.block_width",
@@ -733,6 +754,7 @@ def _llm_freeform_step(
         if changes:
             print(f"  [←LLM] freeform changes: {list(changes.keys())}")
             new_cfg = _apply_freeform_changes(parent_cfg_used, changes)
+            # Dedup check (very rare with freeform — LLM picks unique values)
             h = _cfg_hash(new_cfg)
             if seen_hashes is not None and h in seen_hashes:
                 print(f"  [←LLM] duplicate after freeform changes, fall back to random_mutation")
@@ -741,6 +763,7 @@ def _llm_freeform_step(
             else:
                 op_label = "freeform:" + "+".join(sorted(changes.keys()))[:80]
         else:
+            # Empty changes — LLM tried to "pass" — apply random mutation
             print(f"  [←LLM] empty changes, fall back to random_mutation")
             new_cfg = validate_config(mutate_random(parent_cfg_used, rng))
             op_label = "freeform_empty_fallback"
@@ -777,6 +800,7 @@ def _llm_freeform_step(
 
     return new_cfg, op_label
 
+
 # ---------------------------------------------------------------------------
 # LR-throttle helper (shared by multi_refine and critic_corrector)
 # ---------------------------------------------------------------------------
@@ -795,6 +819,7 @@ def _check_lr_throttled(action_history: Optional[List[Dict]], window: int = 3, t
         )
     )
     return lr_count >= threshold
+
 
 # ---------------------------------------------------------------------------
 # Multi-refine step
@@ -928,6 +953,7 @@ def _llm_multi_refine_step(
 
     return new_cfg, op_label
 
+
 # ---------------------------------------------------------------------------
 # Critic-Corrector step
 # ---------------------------------------------------------------------------
@@ -1058,7 +1084,9 @@ def _llm_critic_corrector_step(
 
     return new_cfg, op_label
 
+
 # ---------------------------------------------------------------------------
+# Batch round: LLM proposes N → surrogate filters → train top-K
 # ---------------------------------------------------------------------------
 
 def _llm_batch_round(
@@ -1083,6 +1111,7 @@ def _llm_batch_round(
     medium_scores_by_family: Optional[Dict[str, List[float]]] = None,
     use_multi_fidelity: bool = True,
     n_train_rows: int = 100_000,
+    require_llm: bool = False,
 ) -> List[Dict]:
     """One batch round: critic → LLM proposes batch_n → surrogate top-batch_k → train."""
     if cheap_scores is None:
@@ -1134,8 +1163,16 @@ def _llm_batch_round(
                 pass
         print(f"  [BATCH-PROPOSE] valid+unique: {len(valid_cfgs)}")
     except Exception as e:
+        if require_llm:
+            raise RuntimeError(f"LLM proposal failed in --require_llm mode: {e}") from e
         print(f"  [BATCH-PROPOSE] LLM failed ({e}), falling back to random")
 
+    # Fallback: random configs if LLM gave too few
+    if require_llm and len(valid_cfgs) < batch_k:
+        raise RuntimeError(
+            f"LLM returned only {len(valid_cfgs)} valid unique configs; "
+            f"{batch_k} are required in --require_llm mode"
+        )
     while len(valid_cfgs) < batch_k:
         # Use _sel_score so fallback mutates best full/medium trial, not cheap-pruned junk
         best = max(all_trials, key=_sel_score) if all_trials else {}
@@ -1225,6 +1262,7 @@ def _llm_batch_round(
 
     return new_trials
 
+
 def _llm_refine_step(
     llm: OpenAILLM,
     best_cfg: Dict,
@@ -1267,7 +1305,9 @@ def _llm_refine_step(
         parent_candidates=parent_candidates,
         action_history=action_history or [],
     )
+    # Prong G: prepend explicit iteration counter so the LLM never thinks
     # this is its only/last call. The advisor flagged this as critical:
+    # without it, gpt-4o-mini sometimes diagnoses "already_good" on iter 1.
     iteration_remaining = max(0, iteration_total - iteration_idx)
     iteration_header = (
         f"=== ITERATION {iteration_idx + 1} of {iteration_total} "
@@ -1276,6 +1316,7 @@ def _llm_refine_step(
         f"Do NOT declare the model 'good enough' — the search continues until budget is exhausted.\n"
     )
     # On the first REFINE call, also include cold-start kickoff (advisor:
+    # "copy context starting from the very beginning"). This way the LLM sees
     # the 5 cold-start trials as part of its conversation memory.
     if first_turn_kickoff:
         user = first_turn_kickoff + "\n" + iteration_header + "\n" + user
@@ -1296,10 +1337,12 @@ def _llm_refine_step(
     n_dedup_retries = 0
 
     try:
+        # Prong F: pass conversation list so the LLM sees its own past responses
         action, params, raw_resp, parsed_json = llm_refine_action(
             llm, SYSTEM_PROMPT, user, conversation=conversation,
         )
 
+        # Prong D: resolve parent_id from LLM response
         parent_id_picked = (parsed_json.get("parent_id") or "best").strip()
         if parent_id_picked != "best" and parent_candidates:
             for pc in parent_candidates:
@@ -1364,6 +1407,7 @@ def _llm_refine_step(
         )
 
     return new_cfg, op_label
+
 
 # ---------------------------------------------------------------------------
 # Evaluation with multi-fidelity
@@ -1475,6 +1519,7 @@ def _cheap_screen_candidates(
     info = [(p["family"], round(p["cheap_score"], 4)) for p in picked[:batch_k]]
     print(f"  [SCREEN] selected {len(selected_cfgs)}: {info}")
     return selected_cfgs, pre_cheap_results
+
 
 # ---------------------------------------------------------------------------
 
@@ -1595,6 +1640,7 @@ def _evaluate_config(
                                 verbose=verbose)
     return full_res
 
+
 # ---------------------------------------------------------------------------
 # Main entry point
 # ---------------------------------------------------------------------------
@@ -1613,14 +1659,23 @@ def run_llm_nas_v2(
     use_refine_loop: bool = True,
     # v6: which evolutionary mode to use during REFINE phase.
     #   "refine"          — action-vocab with all v5 guards (default)
+    #   "freeform"        — LLM returns {"changes": {dotted-path: value}}, no vocab
+    #   "multi_refine"    — LLM picks 1-3 distinct actions per turn (+ LR throttle)
     #   "critic_corrector"— 2-stage: Critic analyses → Corrector picks actions
+    #   "batch"           — LLM proposes N candidates → surrogate filters → train top-K
     mode: str = "refine",
     # Batch mode parameters (used when mode="batch")
-    batch_n: int = 15,
+    batch_n: int = 15,   # how many configs LLM proposes per round
     batch_k: int = 3,    # how many to actually train per round
+    # Fix #14 (v7): random warmup BEFORE LLM cold-start.
+    # If >0, replace LLM cold-start (coldstart_n trials) with this many random
+    # trials. Advisor insight: LLM cold-start produces "textbook" configs;
+    # random gives LLM rich diverse history to reason from at first REFINE call.
     random_warmup: int = 0,
     # How often to inject a full PROPOSE step during REFINE phase (exploration pulse)
     explore_pulse_every: int = 6,
+    # Ablation: set False to hide learning curve data from LLM prompts
+    # (simulates GENIUS / EvoPrompting behaviour — LLM sees only final scores)
     curve_feedback: bool = True,
     # Legacy params kept for backward compat with run_experiment.py
     crossover_p: float = 0.25,
@@ -1639,14 +1694,17 @@ def run_llm_nas_v2(
     builtin_name: Optional[str] = None, # "covtype" | "california_housing" | "miniboonee"
     csv_path: Optional[str] = None,
     # Logging verbosity
-    verbose: bool = True,
+    verbose: bool = True,               # per-epoch training logs + full LLM prompt/response
     # Resume: skip warmup, load existing trials from trials_index.json
+    # Useful when warmup already ran but LLM phase was broken.
+    # Keeps only warmup/family_aware_extra trials, discards LLM-phase trials.
     resume: bool = False,
     # Extend: load ALL existing trials from out_dir, run `budget` MORE trials.
     # Unlike --resume (crash recovery), --extend is for intentionally adding
     # more trials after a completed run — e.g. 40 batch → 15 more refine.
     # Model checkpoints stay in same out_dir/trials/, so ensemble still works.
     extend: bool = False,
+    require_llm: bool = False,
 ) -> Dict[str, Any]:
     """
     Run the v2 LLM NAS pipeline.
@@ -1712,6 +1770,7 @@ def run_llm_nas_v2(
                 num_df_numeric = num_df.apply(_pd.to_numeric, errors="coerce")
                 desc = num_df_numeric.describe().T  # mean, std, min, 25%, 50%, 75%, max
                 if len(desc) > 20:
+                    # Keep top-20 by variance — gives LLM a sense of scale without flooding
                     variances = num_df_numeric.var().sort_values(ascending=False)
                     top_cols = variances.head(20).index.tolist()
                     desc = desc.loc[top_cols]
@@ -1758,6 +1817,7 @@ def run_llm_nas_v2(
             except Exception:
                 pass
 
+        # Sample 5 random rows from train for LLM to see real data
         try:
             sample = X_df.sample(n=min(5, len(X_df)), random_state=seed)
             # Cast NumPy types → native Python for JSON
@@ -1817,6 +1877,7 @@ def run_llm_nas_v2(
     best_primary = -1e18
     trial_id = 0
 
+    # LLM interaction log — paste this file to Claude to debug LLM decisions
     llm_logger = LLMLogger(out_dir_p / "llm_log.jsonl")
     print(f"[NAS] LLM interaction log: {llm_logger.path}")
     print(f"[NAS] curve_feedback={curve_feedback}  "
@@ -1830,6 +1891,7 @@ def run_llm_nas_v2(
         idx_path = out_dir_p / "trials_index.json"
         if idx_path.exists():
             existing = load_json(idx_path).get("trials", [])
+            # Keep only warmup/family_aware_extra trials; drop any broken LLM trials
             warmup_trials = [t for t in existing if t.get("op", "") in warmup_ops]
             if warmup_trials:
                 all_trials = warmup_trials
@@ -1846,6 +1908,7 @@ def run_llm_nas_v2(
                 save_json(out_dir_p / "trials_index.json", {"trials": all_trials})
                 print(f"\n[NAS] === RESUME: loaded {len(all_trials)} warmup trials "
                       f"(best={best_primary:.5f}), skipping warmup phase ===")
+                # Jump straight to LLM phase — skip warmup block below
                 actual_warmup = len([t for t in all_trials if t.get("op") != "family_aware_extra"])
                 coldstart_n = actual_warmup
                 n_warmup_used = actual_warmup
@@ -1870,6 +1933,7 @@ def run_llm_nas_v2(
         idx_path = out_dir_p / "trials_index.json"
         if idx_path.exists():
             existing = load_json(idx_path).get("trials", [])
+            # Load ALL non-error trials (warmup + LLM phase)
             valid = [t for t in existing if t.get("rung") not in ("error",)]
             if valid:
                 all_trials = valid
@@ -1916,6 +1980,8 @@ def run_llm_nas_v2(
     # 5. Cold start (skipped if resume succeeded)
     #
     # Fix #14: two modes here:
+    #   (a) random_warmup == 0  →  LLM cold-start (coldstart_n configs)
+    #   (b) random_warmup  > 0  →  random_warmup random configs, NO LLM
     # ------------------------------------------------------------------ #
     if goto_llm_phase:
         pass  # resume: jump over warmup
@@ -1924,7 +1990,7 @@ def run_llm_nas_v2(
         # Quotas are proportional: resmlp/tabm get double weight (known strong on
         # numeric-heavy tabular data), attention families get fewer trials.
         actual_warmup = random_warmup
-        coldstart_n = 0
+        coldstart_n = 0  # we logically have 0 LLM cold-start
         print(f"\n[NAS] === Stratified Random Warmup ({actual_warmup} configs) ===")
         # Base quotas (for n=24): resmlp×6, tabm×6, mlp×4, ft_transformer×4, gated_tab×2, autoint×2
         _quota_weights = {"resmlp": 6, "tabm": 6, "mlp": 4, "ft_transformer": 4,
@@ -1946,6 +2012,7 @@ def run_llm_nas_v2(
         print(f"  Family distribution: {family_dist}")
         cs_op_label = "random_warmup"
     else:
+        # MODE A — LLM cold-start (default, original behaviour)
         actual_warmup = coldstart_n
         print(f"\n[NAS] === LLM Cold Start ({coldstart_n} configs) ===")
         cold_cfgs = _llm_cold_start_configs(llm, coldstart_n, summary, baseline_for_prompt, rng)
@@ -1983,9 +2050,11 @@ def run_llm_nas_v2(
     # ------------------------------------------------------------------ #
     # Insight from v4: helena won because cold-start landed in ft_transformer
     # (the right family for the data). On pol/jannis, cold-start missed the
+    # best family → LLM spent 60-80% of budget randomly walking via
     # switch_family. Each switch_family produces a RANDOM new config in the
     # new family — too noisy.
     #
+    # Solution: after the 5 diverse LLM cold-starts, pick the best-performing
     # family and add 2 EXTRA random samples in JUST that family. This:
     #   (a) gives the surrogate more data on the winning family
     #   (b) gives REFINE a stronger parent population to mutate from
@@ -2041,6 +2110,7 @@ def run_llm_nas_v2(
     # 5. Main search loop — REFINE or PROPOSE
     # ------------------------------------------------------------------ #
     # Adjust n_evo_steps to account for family-aware extras
+    # Fix #14: account for either LLM cold-start (coldstart_n) OR random
     # warmup (random_warmup) — only one is non-zero by construction.
     if not goto_llm_phase:
         n_warmup_used = random_warmup if random_warmup > 0 else coldstart_n
@@ -2085,6 +2155,7 @@ def run_llm_nas_v2(
                 medium_scores_by_family=medium_scores_by_family,
                 use_multi_fidelity=use_multi_fidelity,
                 n_train_rows=int(summary.get("n_rows", 100_000)),
+                require_llm=require_llm,
             )
             n_remaining -= len(new_trials)
             round_idx += 1
@@ -2119,6 +2190,13 @@ def run_llm_nas_v2(
         # Legacy key — keep for backward compat with downstream scripts
         save_json(out_dir_p / "best_trial.json", best_by_primary)
 
+        # Unbiased single-model reporting: choose using validation search score,
+        # then evaluate that selected configuration once on untouched test.
+        from .ensemble import evaluate_config_on_holdout
+        selected_single_test = evaluate_config_on_holdout(
+            best_by_search["config"], raw, seed=seed, device=device,
+        )
+
         # ── Ensemble (batch mode) ─────────────────────────────────────────
         ensemble_result: Dict = {}
         if ensemble_k > 1 and len(full_trials) >= 2:
@@ -2142,13 +2220,18 @@ def run_llm_nas_v2(
             "seed": seed,
             "n_trials": len(all_trials),
             "n_full_trials": len(full_trials),
-            # Honest accuracy for baseline comparison
+            # Legacy validation summary retained for compatibility
             "best_primary": best_primary_val,
+            "validation_best_primary": best_primary_val,
             "best_primary_trial_id": best_by_primary.get("trial_id"),
             "best_primary_family": best_by_primary.get("config", {}).get("arch", {}).get("family"),
             # NAS selection metric
             "best_search_score": best_search_val,
             "best_search_trial_id": best_by_search.get("trial_id"),
+            # Untouched holdout metrics for final method comparison
+            "selected_single_test": selected_single_test,
+            "test_primary": selected_single_test.get("test_primary"),
+            "evaluation_protocol": "select_on_validation_report_on_test",
             # Ensemble
             "best_ensemble": best_ensemble,
             "ensemble_k": ensemble_result.get("k"),
@@ -2158,7 +2241,9 @@ def run_llm_nas_v2(
         action_stats_out = action_stats(all_trials)
         save_json(out_dir_p / "action_stats.json", action_stats_out)
         print(f"\n[NAS] BATCH done — best_primary={best_primary_val:.6f}"
-              + (f"  best_ensemble={best_ensemble:.6f}" if best_ensemble else "")
+              + (f"  test_primary={selected_single_test.get('test_primary'):.6f}"
+                 if selected_single_test.get("test_primary") is not None else "")
+              + (f"  test_ensemble={best_ensemble:.6f}" if best_ensemble else "")
               + f"  trials={len(all_trials)}")
         return {
             "best_trial": best_trial,
@@ -2171,7 +2256,9 @@ def run_llm_nas_v2(
 
     # REFINE state: track best config + action call history
     refine_history: List[Dict] = []      # [{step, action, primary_after}]
+    # Prong B: rich action history with hashes/dedup info passed to LLM
     action_history: List[Dict] = []      # [{step, action, parent_id, child_hash, dedup, primary_after, improved}]
+    # Prong F: multi-turn conversation history for REFINE operator. The LLM
     # sees its own previous responses as actual assistant messages, giving it
     # natural memory of what it tried and how it justified each decision.
     # Initialized lazily on first REFINE call. Windowed to last 6 turns.
@@ -2219,6 +2306,7 @@ def run_llm_nas_v2(
         print(f"\n  [step {global_step}] mode={'PROPOSE' if is_propose_step else 'REFINE'}", flush=True)
 
         if is_propose_step:
+            # ---- PROPOSE: LLM generates n_proposals free-form configs ----
             history_compact = _history_for_prompt(all_trials, top_k=8, recent_k=4,
                                                   include_curves=curve_feedback)
             candidate_cfgs = _llm_propose_configs(
@@ -2239,6 +2327,8 @@ def run_llm_nas_v2(
             op_label = "propose"
 
         else:
+            # ---- REFINE: LLM picks ONE action from the fixed vocabulary ----
+            # In curve-blind ablation, pass empty curve so LLM must decide without it
             curve_for_refine = best_curve_now if curve_feedback else {}
 
             # Bug-fix #4 + #9: HARD MODE-COLLAPSE GUARD (looser trigger).
@@ -2280,6 +2370,7 @@ def run_llm_nas_v2(
                         )
 
             if not forced_switch and mode == "multi_refine":
+                # Multi-refine: LLM picks 1-3 distinct actions per turn + LR throttle
                 if len(refine_conversation) > 1 + (REFINE_CONV_MAX_TURNS - 1) * 2:
                     sys_msg = refine_conversation[0]
                     tail = refine_conversation[-(REFINE_CONV_MAX_TURNS - 1) * 2:]
@@ -2317,6 +2408,7 @@ def run_llm_nas_v2(
                 )
 
             elif not forced_switch and mode == "critic_corrector":
+                # Critic-Corrector: 2 LLM calls per step
                 cfg_to_eval, op_label = _llm_critic_corrector_step(
                     llm=llm,
                     best_cfg=best_cfg_now,
@@ -2334,6 +2426,7 @@ def run_llm_nas_v2(
                 )
 
             elif not forced_switch and mode == "freeform":
+                # Mode 3: freeform mode — LLM returns changes dict, not action.
                 # Window conversation same as in refine mode.
                 if len(refine_conversation) > 1 + (REFINE_CONV_MAX_TURNS - 1) * 2:
                     sys_msg = refine_conversation[0]
@@ -2375,6 +2468,7 @@ def run_llm_nas_v2(
                 )
 
                 # Fix #15 (v7): ANTI-CYCLING GUARD for freeform mode.
+                # v6 helena showed LLM cycles on lr/dropout/epochs/patience and
                 # never touches structural params (family/n_blocks/d_token) →
                 # mode collapse 84% in ft_transformer, 5 trials with same
                 # primary 0.65188. Solution: if last 4 freeform turns NEVER
@@ -2431,10 +2525,12 @@ def run_llm_nas_v2(
                     refine_conversation[:] = [sys_msg] + tail
 
                 # Prong G: prepare cold-start summary for the FIRST REFINE call.
+                # Per advisor: "копить контекст с самого начала" — LLM should
                 # see the cold-start trials as the seed of the conversation.
                 first_turn_kickoff = ""
                 if not refine_conversation:
                     coldstart_summary = []
+                    # include both LLM cold-starts AND family-aware extras (Fix #11)
                     n_init = n_warmup_used + family_aware_extras
                     for t in all_trials[:n_init]:
                         coldstart_summary.append({
@@ -2475,6 +2571,7 @@ def run_llm_nas_v2(
                 )
 
                 # Mode 2 (v6): ANTI-OSCILLATION GUARD.
+                # Empirical: on pol LLM kept ping-ponging reduce_lr→increase_lr→
                 # reduce_lr→increase_lr because it flipped its diagnosis each
                 # iteration based on the LAST result. The structured action
                 # vocabulary lets each lr-flip undo the previous one, with no
@@ -2483,6 +2580,7 @@ def run_llm_nas_v2(
                 # pattern (≥2 reduce_lr AND ≥2 increase_lr in the last 4)
                 # AND best_primary did not improve over those 4 steps,
                 # OVERRIDE the LR-action with extend_training (something
+                # truly different). LLM keeps its choice of family/arch.
                 if op_label in ("refine:reduce_lr", "refine:increase_lr"):
                     last4 = refine_history[-4:] if refine_history else []
                     if len(last4) == 4:
@@ -2521,8 +2619,11 @@ def run_llm_nas_v2(
 
                 # Fix #10 (v4 → v5): RELAXED LR-BIAS GUARD.
                 # Old logic (LIMIT=2 → forced:switch_family) was way too
+                # aggressive — on pol it ate 13/17 LLM-trials. New logic:
+                #   - LIMIT increased 2 → 4 (give LLM more room).
                 #   - On hit: REPLACE the action with explore_lr_extreme_low
                 #     (an aggressive but family-preserving move) rather than
+                #     seizing control via switch_family. This keeps LLM's
                 #     architectural choice intact while breaking the lr-spiral.
                 LR_BIAS_LIMIT = 4
                 if (not op_label_already_handled
@@ -2580,6 +2681,7 @@ def run_llm_nas_v2(
         all_trials.append(rec)
         surrogate.add(cfg_to_eval, result.search_score)
 
+        # Update LLM log with actual eval result
         if llm_logger._lines:
             llm_logger.update_primary(len(llm_logger._lines) - 1, result.primary)
 
@@ -2615,6 +2717,7 @@ def run_llm_nas_v2(
             })
 
             # Prong B + Mode 3 rich action_history with cfg_hash + dedup info.
+            # For freeform mode: also store the ACTUAL diff so LLM sees what
             # it tried last turn ("you set train.lr=0.0005, train.epochs=200
             # → primary 0.785, regressed −0.003").
             child_h = _cfg_hash(cfg_to_eval)
@@ -2677,6 +2780,7 @@ def run_llm_nas_v2(
 
     print(f"\n[NAS] {llm_logger.summary()}")
 
+    # Action statistics (for thesis analysis)
     a_stats = action_stats(llm_logger._lines) if use_refine_loop else {}
     save_json(out_dir_p / "action_stats.json", a_stats)
     if use_refine_loop and refine_history:
@@ -2715,12 +2819,19 @@ def run_llm_nas_v2(
     save_json(out_dir_p / "best_trial_by_search.json",  best_by_search_final)
     save_json(out_dir_p / "best_trial_by_primary.json", best_by_primary_final)
     save_json(out_dir_p / "best_trial.json", best_by_primary_final)
+    from .ensemble import evaluate_config_on_holdout
+    selected_single_test = evaluate_config_on_holdout(
+        best_by_search_final["config"], raw, seed=seed, device=device,
+    )
 
     total_time = time.time() - t_start
     final = {
         "best_trial": best_trial,
         "all_trials": all_trials,
         "ensemble": ensemble_result,
+        "selected_single_test": selected_single_test,
+        "test_primary": selected_single_test.get("test_primary"),
+        "evaluation_protocol": "select_on_validation_report_on_test",
         "summary": summary,
         "baselines": baselines,
         "total_seconds": total_time,
@@ -2739,7 +2850,9 @@ def run_llm_nas_v2(
     print(f"  Best arch: {best_trial['config']['arch']['family']}")
     return final
 
+
 # ---------------------------------------------------------------------------
+# Standalone ensemble — run AFTER NAS search (no new LLM calls)
 # ---------------------------------------------------------------------------
 
 def run_ensemble_only(

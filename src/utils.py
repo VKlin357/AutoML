@@ -9,6 +9,7 @@ from typing import Any, Dict
 import numpy as np
 import torch
 
+
 def seed_everything(seed: int = 42) -> None:
     """Full determinism — fixes the non-deterministic training bug that caused
     SAME config to produce primary=0.650 in turn7 vs 0.540 in turn8 (helena v6).
@@ -54,13 +55,16 @@ def seed_everything(seed: int = 42) -> None:
         # crash — we still have cudnn.deterministic=True which covers most cases.
         print(f"[seed_everything] WARNING: use_deterministic_algorithms failed: {e}")
 
+
 def now_id() -> str:
     return datetime.now().strftime("%Y%m%d_%H%M%S")
+
 
 def ensure_dir(path):
     p = Path(path)
     p.mkdir(parents=True, exist_ok=True)
     return p
+
 
 def to_jsonable(x: Any) -> Any:
     if is_dataclass(x):
@@ -73,15 +77,18 @@ def to_jsonable(x: Any) -> Any:
         return x.tolist()
     return x
 
+
 def save_json(path, obj: Dict[str, Any]) -> None:
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     with open(path, "w", encoding="utf-8") as f:
         json.dump(obj, f, ensure_ascii=False, indent=2, default=to_jsonable)
 
+
 def load_json(path) -> Dict[str, Any]:
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
+
 
 def getenv(name, default=None):
     v = os.getenv(name)

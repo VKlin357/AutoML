@@ -1,0 +1,18 @@
+{
+  "val_primary_by_epoch": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+  ],
+  "train_loss_by_epoch": [
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN
+  ]
+}

@@ -37,6 +37,7 @@ except ImportError:
 from .metrics import TaskType, infer_task_type
 from .preprocessing import Preprocessor, PreparedSplit
 
+
 # ---------------------------------------------------------------------------
 # Builtin dataset registry
 # ---------------------------------------------------------------------------
@@ -73,6 +74,16 @@ BUILTIN_DATASETS = {
         "NNs competitive; strong non-linear cross-sensor interactions.",
         "multiclass",
     ),
+    "harth": (
+        "HARTH — UCI. 6.46M raw 50 Hz readings from two accelerometers worn by "
+        "22 subjects in free-living activity; windowed with subject-group holdout.",
+        "multiclass",
+    ),
+    "pamap2": (
+        "PAMAP2 — UCI. 3.85M raw 100 Hz readings from three wearable IMUs and "
+        "9 subjects performing physical activities; windowed with subject-group holdout.",
+        "multiclass",
+    ),
     "emg_gestures": (
         "EMG hand gestures — UCI. 60000+ sEMG signal windows × 64 time-step features "
         "from 8 forearm EMG electrodes. 5 hand gesture classes. "
@@ -88,6 +99,7 @@ BUILTIN_DATASETS = {
         "binary",
     ),
 }
+
 
 # ---------------------------------------------------------------------------
 # Raw dataset (NEW interface)
@@ -108,6 +120,7 @@ class RawDataset:
     name: str
     openml_id: int          # -1 for non-OpenML datasets
 
+
 def _detect_columns(df: pd.DataFrame) -> Tuple[List[str], List[str]]:
     cat_cols, num_cols = [], []
     for c in df.columns:
@@ -121,6 +134,7 @@ def _detect_columns(df: pd.DataFrame) -> Tuple[List[str], List[str]]:
         else:
             num_cols.append(c)
     return num_cols, cat_cols
+
 
 def load_openml_raw(
     openml_id: int,
@@ -175,6 +189,7 @@ def load_openml_raw(
         "n_test": int(len(X_test)),
         "num_cols_preview": num_cols[:50],
         "cat_cols_preview": cat_cols[:50],
+        # class-imbalance hint for the LLM
         "class_balance": _class_balance(y_train, task_t),
     }
 
@@ -188,11 +203,13 @@ def load_openml_raw(
     )
     return raw, summary
 
+
 def _class_balance(y, task):
     if task == "regression":
         return None
     vals, counts = np.unique(y, return_counts=True)
     return {int(v): int(c) for v, c in zip(vals, counts)}
+
 
 def _make_splits(
     X: pd.DataFrame,
@@ -205,16 +222,36 @@ def _make_splits(
     test_size: float = 0.2,
     val_size: float = 0.2,
     seed: int = 42,
+    temporal: bool = False,
+    feature_engineering: Optional[dict] = None,
 ) -> Tuple["RawDataset", dict]:
-    """Shared split + summary logic for any (X, y) pair."""
-    strat = y_arr if task in ("binary", "multiclass") else None
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y_arr, test_size=test_size, random_state=seed, stratify=strat,
-    )
-    strat2 = y_train if task in ("binary", "multiclass") else None
-    X_train, X_val, y_train, y_val = train_test_split(
-        X_train, y_train, test_size=val_size, random_state=seed, stratify=strat2,
-    )
+    """Shared split + summary logic for any (X, y) pair.
+
+    If temporal=True the data is assumed to be already sorted chronologically
+    and split into train / val / test by position (no shuffling), which avoids
+    look-ahead leakage for time-series datasets.
+    """
+    if temporal:
+        n = len(X)
+        n_test = int(n * test_size)
+        n_val  = int((n - n_test) * val_size)
+        n_train = n - n_val - n_test
+        X_train = X.iloc[:n_train]
+        X_val   = X.iloc[n_train:n_train + n_val]
+        X_test  = X.iloc[n_train + n_val:]
+        y_train = y_arr[:n_train]
+        y_val   = y_arr[n_train:n_train + n_val]
+        y_test  = y_arr[n_train + n_val:]
+        print(f"[Data] Temporal split: train={n_train}  val={n_val}  test={n_test}")
+    else:
+        strat = y_arr if task in ("binary", "multiclass") else None
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y_arr, test_size=test_size, random_state=seed, stratify=strat,
+        )
+        strat2 = y_train if task in ("binary", "multiclass") else None
+        X_train, X_val, y_train, y_val = train_test_split(
+            X_train, y_train, test_size=val_size, random_state=seed, stratify=strat2,
+        )
 
     n_classes = 1
     if task == "multiclass":
@@ -234,9 +271,14 @@ def _make_splits(
         "n_train": int(len(X_train)),
         "n_val": int(len(X_val)),
         "n_test": int(len(X_test)),
+        "split_strategy": "temporal_ordered" if temporal else "random_stratified",
+        "feature_engineering": feature_engineering or {"type": "raw_tabular"},
         "num_cols_preview": num_cols[:50],
         "cat_cols_preview": cat_cols[:50],
         "class_balance": _class_balance(y_train, task),
+        "class_balance_train": _class_balance(y_train, task),
+        "class_balance_val": _class_balance(y_val, task),
+        "class_balance_test": _class_balance(y_test, task),
     }
     raw = RawDataset(
         X_train=X_train.reset_index(drop=True),
@@ -248,6 +290,124 @@ def _make_splits(
         name=name, openml_id=dataset_id,
     )
     return raw, summary
+
+
+def _make_official_test_splits(
+    X_train_full: pd.DataFrame,
+    y_train_full: np.ndarray,
+    X_test: pd.DataFrame,
+    y_test: np.ndarray,
+    task: TaskType,
+    num_cols: List[str],
+    cat_cols: List[str],
+    name: str,
+    dataset_id: int,
+    val_size: float = 0.2,
+    seed: int = 42,
+    feature_engineering: Optional[dict] = None,
+) -> Tuple["RawDataset", dict]:
+    """Keep a dataset-provided test split untouched and derive val from train."""
+    strat = y_train_full if task in ("binary", "multiclass") else None
+    X_train, X_val, y_train, y_val = train_test_split(
+        X_train_full,
+        y_train_full,
+        test_size=val_size,
+        random_state=seed,
+        stratify=strat,
+    )
+
+    if task == "multiclass":
+        n_classes = int(max(np.max(y_train), np.max(y_test)) + 1)
+    elif task == "binary":
+        n_classes = 2
+    else:
+        n_classes = 1
+
+    summary = {
+        "openml_id": dataset_id,
+        "name": name,
+        "n_rows": int(len(X_train_full) + len(X_test)),
+        "n_features": int(X_train_full.shape[1]),
+        "n_num": int(len(num_cols)),
+        "n_cat": int(len(cat_cols)),
+        "task": task,
+        "n_classes": n_classes,
+        "n_train": int(len(X_train)),
+        "n_val": int(len(X_val)),
+        "n_test": int(len(X_test)),
+        "split_strategy": "official_test_with_train_only_validation",
+        "feature_engineering": feature_engineering or {"type": "raw_tabular"},
+        "num_cols_preview": num_cols[:50],
+        "cat_cols_preview": cat_cols[:50],
+        "class_balance": _class_balance(y_train, task),
+        "class_balance_train": _class_balance(y_train, task),
+        "class_balance_val": _class_balance(y_val, task),
+        "class_balance_test": _class_balance(y_test, task),
+    }
+    raw = RawDataset(
+        X_train=X_train.reset_index(drop=True),
+        X_val=X_val.reset_index(drop=True),
+        X_test=X_test.reset_index(drop=True),
+        y_train=y_train, y_val=y_val, y_test=y_test,
+        num_cols=num_cols, cat_cols=cat_cols,
+        task=task, n_classes=n_classes,
+        name=name, openml_id=dataset_id,
+    )
+    return raw, summary
+
+
+def _make_lagged_timeseries_frame(
+    X: pd.DataFrame,
+    y_arr: np.ndarray,
+    *,
+    lag_steps: List[int],
+    window_sizes: List[int],
+    include_diff1: bool = True,
+) -> Tuple[pd.DataFrame, np.ndarray, dict]:
+    """Build leakage-free supervised tabular features from a time-ordered frame.
+
+    Every generated predictor is based on observations strictly before the
+    target timestamp. The target at row t is therefore predicted from lags
+    t-1, t-2, ... and rolling statistics computed over the past only.
+    """
+    base_cols = list(X.columns)
+    features = {}
+
+    for lag in lag_steps:
+        shifted = X.shift(lag)
+        for c in base_cols:
+            features[f"{c}_lag{lag}"] = shifted[c]
+
+    past = X.shift(1)
+    for w in window_sizes:
+        roll = past.rolling(window=w, min_periods=w)
+        for c in base_cols:
+            features[f"{c}_roll{w}_mean"] = roll[c].mean()
+            features[f"{c}_roll{w}_std"] = roll[c].std()
+
+    if include_diff1:
+        for c in base_cols:
+            features[f"{c}_diff1"] = X[c].shift(1) - X[c].shift(2)
+
+    X_supervised = pd.DataFrame(features)
+    valid = X_supervised.notna().all(axis=1).to_numpy()
+    X_supervised = X_supervised.loc[valid].reset_index(drop=True)
+    y_supervised = y_arr[valid]
+
+    metadata = {
+        "type": "time_series_lag_window_tabularization",
+        "target_alignment": "predict_y_t_from_features_before_t",
+        "uses_current_timestamp_features": False,
+        "base_features": base_cols,
+        "lag_steps": lag_steps,
+        "rolling_windows": window_sizes,
+        "rolling_statistics": ["mean", "std"],
+        "include_diff1": include_diff1,
+        "dropped_initial_rows": int((~valid).sum()),
+        "n_features_after": int(X_supervised.shape[1]),
+    }
+    return X_supervised, y_supervised, metadata
+
 
 # ---------------------------------------------------------------------------
 # Built-in datasets (sklearn + UCI) — no OpenML dependency
@@ -287,6 +447,12 @@ def load_builtin_raw(
     if name == "har":
         return _load_har_uci(task, test_size, val_size, seed, cache_dir)
 
+    if name == "harth":
+        return _load_harth_uci(task, test_size, val_size, seed, cache_dir)
+
+    if name == "pamap2":
+        return _load_pamap2_uci(task, test_size, val_size, seed, cache_dir)
+
     if name in ("emg_gestures", "emg"):
         return _load_emg_gestures_uci(task, test_size, val_size, seed, cache_dir)
 
@@ -297,6 +463,7 @@ def load_builtin_raw(
         f"Unknown builtin dataset: {name!r}. "
         f"Available: {list(BUILTIN_DATASETS.keys())}"
     )
+
 
 def _load_california_housing(task, test_size, val_size, seed):
     from sklearn.datasets import fetch_california_housing
@@ -310,6 +477,7 @@ def _load_california_housing(task, test_size, val_size, seed):
     return _make_splits(X, y, task_t, num_cols, cat_cols,
                         "california_housing", -1, test_size, val_size, seed)
 
+
 def _load_covtype(task, test_size, val_size, seed):
     from sklearn.datasets import fetch_covtype
     print("[Data] Loading Covertype (sklearn built-in, 581k rows) …")
@@ -322,6 +490,7 @@ def _load_covtype(task, test_size, val_size, seed):
     cat_cols = [c for c in X.columns if X[c].nunique() <= 2]
     return _make_splits(X, y, task_t, num_cols, cat_cols,
                         "covertype", -2, test_size, val_size, seed)
+
 
 def _load_miniboonee_uci(task, test_size, val_size, seed, cache_dir: Path):
     """Download MiniBooNE from UCI and cache locally."""
@@ -361,6 +530,7 @@ def _load_miniboonee_uci(task, test_size, val_size, seed, cache_dir: Path):
     return _make_splits(X, y_arr, task_t, cols, [],
                         "MiniBooNE", -3, test_size, val_size, seed)
 
+
 # ---------------------------------------------------------------------------
 # Biomedical + Financial built-in loaders
 # ---------------------------------------------------------------------------
@@ -385,6 +555,7 @@ def _download_url(url: str, dest: Path, name: str) -> None:
             f"Download manually from:\n  {url}\n"
             f"and save to: {dest}"
         ) from e
+
 
 def _parse_ucr_ts_file(content: str):
     """Parse UCR .ts format → (list_of_feature_rows, list_of_labels).
@@ -420,6 +591,7 @@ def _parse_ucr_ts_file(content: str):
             labels.append(label)
     return rows, labels
 
+
 def _load_ecg5000_ucr(task, test_size, val_size, seed, cache_dir: Path):
     """ECG5000 cardiac arrhythmia — UCR Time Series Classification Archive.
 
@@ -438,7 +610,8 @@ def _load_ecg5000_ucr(task, test_size, val_size, seed, cache_dir: Path):
             cache_zip, "ECG5000",
         )
 
-    rows, label_list = [], []
+    split_rows = {"train": [], "test": []}
+    split_labels = {"train": [], "test": []}
     with zipfile.ZipFile(cache_zip) as zf:
         ts_files = [n for n in zf.namelist() if n.endswith('.ts')]
         if not ts_files:
@@ -446,28 +619,55 @@ def _load_ecg5000_ucr(task, test_size, val_size, seed, cache_dir: Path):
                 f"ECG5000.zip contains no .ts files: {zf.namelist()}"
             )
         for fname in ts_files:
+            upper_name = fname.upper()
+            if "TRAIN" in upper_name:
+                split = "train"
+            elif "TEST" in upper_name:
+                split = "test"
+            else:
+                continue
             content = zf.read(fname).decode('utf-8', errors='replace')
             r, l = _parse_ucr_ts_file(content)
-            rows.extend(r)
-            label_list.extend(l)
+            split_rows[split].extend(r)
+            split_labels[split].extend(l)
 
-    if not rows:
+    if not split_rows["train"] or not split_rows["test"]:
         raise RuntimeError(
-            "ECG5000: no data parsed. Delete ~/.cache/nas_datasets/ECG5000.zip and retry."
+            "ECG5000: official TRAIN/TEST files were not parsed. "
+            "Delete ~/.cache/nas_datasets/ECG5000.zip and retry."
         )
 
-    n_feats = max(len(r) for r in rows)
+    all_rows = split_rows["train"] + split_rows["test"]
+    all_labels = split_labels["train"] + split_labels["test"]
+    n_feats = max(len(r) for r in all_rows)
     # Pad shorter rows with 0
-    rows = [r + [0.0] * (n_feats - len(r)) for r in rows]
     cols = [f"t{i}" for i in range(n_feats)]
-    X = pd.DataFrame(rows, columns=cols, dtype=np.float32)
-    y_arr = pd.Series(label_list).astype("category").cat.codes.to_numpy(dtype=np.int64)
+    label_categories = list(pd.unique(pd.Series(all_labels)))
+    label_to_id = {label: idx for idx, label in enumerate(label_categories)}
+
+    def _as_frame(rows):
+        padded = [r + [0.0] * (n_feats - len(r)) for r in rows]
+        return pd.DataFrame(padded, columns=cols, dtype=np.float32)
+
+    X_train_full = _as_frame(split_rows["train"])
+    X_test = _as_frame(split_rows["test"])
+    y_train_full = np.asarray([label_to_id[label] for label in split_labels["train"]], dtype=np.int64)
+    y_test = np.asarray([label_to_id[label] for label in split_labels["test"]], dtype=np.int64)
     task_t: TaskType = "multiclass" if task == "auto" else task
 
-    print(f"[Data] ECG5000: {len(X)} samples × {n_feats} time steps  "
-          f"classes={np.unique(y_arr).tolist()}")
-    return _make_splits(X, y_arr, task_t, cols, [], "ECG5000", -10,
-                        test_size, val_size, seed)
+    print(f"[Data] ECG5000: {len(all_rows)} samples × {n_feats} time steps  "
+          f"classes={np.unique(np.concatenate([y_train_full, y_test])).tolist()}")
+    return _make_official_test_splits(
+        X_train_full, y_train_full, X_test, y_test,
+        task_t, cols, [], "ECG5000", -10,
+        val_size=val_size, seed=seed,
+        feature_engineering={
+            "type": "raw_time_series_segment_as_tabular_vector",
+            "sequence_length": n_feats,
+            "split_origin": "UCR_official_train_test",
+        },
+    )
+
 
 def _load_har_uci(task, test_size, val_size, seed, cache_dir: Path):
     """Human Activity Recognition — UCI ML Repository.
@@ -538,16 +738,277 @@ def _load_har_uci(task, test_size, val_size, seed, cache_dir: Path):
         except Exception:
             feat_names = [f"f{i}" for i in range(X_train.shape[1])]
 
-    X = np.vstack([X_train, X_test]).astype(np.float32)
-    y = np.concatenate([y_train, y_test])
-    X_df = pd.DataFrame(X, columns=feat_names[:X.shape[1]])
-    cols = list(X_df.columns)
+    X_train_df = pd.DataFrame(X_train.astype(np.float32), columns=feat_names[:X_train.shape[1]])
+    X_test_df = pd.DataFrame(X_test.astype(np.float32), columns=feat_names[:X_test.shape[1]])
+    cols = list(X_train_df.columns)
     task_t: TaskType = "multiclass" if task == "auto" else task
 
-    print(f"[Data] HAR: {len(X_df)} samples × {X.shape[1]} features  "
-          f"classes={np.unique(y).tolist()}")
-    return _make_splits(X_df, y, task_t, cols, [], "HAR", -11,
-                        test_size, val_size, seed)
+    print(f"[Data] HAR: {len(X_train_df) + len(X_test_df)} samples × {X_train_df.shape[1]} features  "
+          f"classes={np.unique(np.concatenate([y_train, y_test])).tolist()}")
+    return _make_official_test_splits(
+        X_train_df, y_train, X_test_df, y_test,
+        task_t, cols, [], "HAR", -11,
+        val_size=val_size, seed=seed,
+        feature_engineering={
+            "type": "precomputed_sensor_window_features",
+            "split_origin": "UCI_HAR_official_subject_split",
+        },
+    )
+
+
+def _make_subject_window_splits(
+    streams: List[Tuple[str, str, np.ndarray, np.ndarray]],
+    *,
+    sensor_cols: List[str],
+    task: TaskType,
+    name: str,
+    dataset_id: int,
+    raw_n_rows: int,
+    source_metadata: dict,
+    window_size: int = 128,
+    stride: int = 32,
+    min_label_purity: float = 0.8,
+    fixed_subject_partitions: Optional[dict] = None,
+) -> Tuple["RawDataset", dict]:
+    """Window continuous sensor streams after a fixed subject-wise split.
+
+    ``streams`` entries are ``(subject_id, session_id, numeric_values, labels)``.
+    Labels must be zero-based class ids; ``-1`` marks unlabeled transition rows.
+    """
+    subjects = sorted({s[0] for s in streams})
+    if len(subjects) < 5:
+        raise RuntimeError(f"{name}: at least five subjects are required for group holdout")
+
+    if fixed_subject_partitions is not None:
+        train_subjects = set(fixed_subject_partitions["train"])
+        val_subjects = set(fixed_subject_partitions["val"])
+        test_subjects = set(fixed_subject_partitions["test"])
+        assigned = train_subjects | val_subjects | test_subjects
+        if assigned != set(subjects) or (
+            train_subjects & val_subjects
+            or train_subjects & test_subjects
+            or val_subjects & test_subjects
+        ):
+            raise RuntimeError(f"{name}: invalid fixed subject partition")
+    else:
+        # Fixed partition: experimental seed may change model initialization, not test subjects.
+        split_rng = np.random.default_rng(42)
+        shuffled = list(split_rng.permutation(subjects))
+        n_test = max(1, int(round(len(subjects) * 0.2)))
+        n_val = max(1, int(round(len(subjects) * 0.2)))
+        test_subjects = set(shuffled[:n_test])
+        val_subjects = set(shuffled[n_test:n_test + n_val])
+        train_subjects = set(shuffled[n_test + n_val:])
+    partitions = {
+        "train": train_subjects,
+        "val": val_subjects,
+        "test": test_subjects,
+    }
+
+    flat_cols = [f"t{t}_{c}" for t in range(window_size) for c in sensor_cols]
+    frames: dict = {}
+    labels_out: dict = {}
+    for split, split_subjects in partitions.items():
+        chunks, target_chunks = [], []
+        for subject, _session, values, labels in streams:
+            if subject not in split_subjects or len(values) < window_size:
+                continue
+            starts = np.arange(0, len(values) - window_size + 1, stride, dtype=np.int64)
+            row_idx = starts[:, None] + np.arange(window_size, dtype=np.int64)[None, :]
+            window_labels = labels[row_idx]
+            selected, targets = [], []
+            for i, row in enumerate(window_labels):
+                valid = row[row >= 0]
+                if len(valid) == 0:
+                    continue
+                target = int(np.bincount(valid).argmax())
+                if float(np.mean(row == target)) >= min_label_purity:
+                    selected.append(i)
+                    targets.append(target)
+            if selected:
+                window_values = values[row_idx[np.asarray(selected, dtype=np.int64)]]
+                chunks.append(window_values.reshape(len(selected), -1).astype(np.float32))
+                target_chunks.append(np.asarray(targets, dtype=np.int64))
+        if not chunks:
+            raise RuntimeError(f"{name}: no usable windows produced for {split} split")
+        frames[split] = pd.DataFrame(np.concatenate(chunks, axis=0), columns=flat_cols)
+        labels_out[split] = np.concatenate(target_chunks, axis=0)
+
+    class_sets = {split: set(np.unique(values).tolist())
+                  for split, values in labels_out.items()}
+    if not (class_sets["train"] == class_sets["val"] == class_sets["test"]):
+        raise RuntimeError(
+            f"{name}: group split has inconsistent class coverage: {class_sets}. "
+            "Choose subject partitions or an activity subset before training."
+        )
+
+    n_classes = int(max(np.max(y) for y in labels_out.values()) + 1)
+    feature_engineering = {
+        "type": "raw_sensor_sliding_window_as_tabular_vector",
+        "window_size": window_size,
+        "stride": stride,
+        "min_label_purity": min_label_purity,
+        "sensor_columns": sensor_cols,
+        "split_origin": "fixed_subject_group_holdout_before_windowing",
+        "partition_policy": ("fixed_subject_class_coverage"
+                             if fixed_subject_partitions is not None
+                             else "fixed_seeded_subject_partition"),
+        **source_metadata,
+    }
+    summary = {
+        "openml_id": dataset_id,
+        "name": name,
+        "n_rows": int(sum(len(x) for x in frames.values())),
+        "raw_n_rows": int(raw_n_rows),
+        "n_features": len(flat_cols),
+        "n_num": len(flat_cols),
+        "n_cat": 0,
+        "task": task,
+        "n_classes": n_classes,
+        "n_train": int(len(frames["train"])),
+        "n_val": int(len(frames["val"])),
+        "n_test": int(len(frames["test"])),
+        "split_strategy": "fixed_subject_group_holdout_before_windowing",
+        "split_subjects_train": sorted(train_subjects),
+        "split_subjects_val": sorted(val_subjects),
+        "split_subjects_test": sorted(test_subjects),
+        "feature_engineering": feature_engineering,
+        "num_cols_preview": flat_cols[:50],
+        "cat_cols_preview": [],
+        "class_balance": _class_balance(labels_out["train"], task),
+        "class_balance_train": _class_balance(labels_out["train"], task),
+        "class_balance_val": _class_balance(labels_out["val"], task),
+        "class_balance_test": _class_balance(labels_out["test"], task),
+    }
+    raw = RawDataset(
+        X_train=frames["train"], X_val=frames["val"], X_test=frames["test"],
+        y_train=labels_out["train"], y_val=labels_out["val"], y_test=labels_out["test"],
+        num_cols=flat_cols, cat_cols=[], task=task, n_classes=n_classes,
+        name=name, openml_id=dataset_id,
+    )
+    print(f"[Data] {name}: {raw_n_rows} raw rows -> {summary['n_rows']} windows x "
+          f"{len(flat_cols)} features; subjects train/val/test="
+          f"{len(train_subjects)}/{len(val_subjects)}/{len(test_subjects)}")
+    return raw, summary
+
+
+def _load_harth_uci(task, test_size, val_size, seed, cache_dir: Path):
+    """HARTH: raw free-living accelerometer signals, split by participant."""
+    import zipfile
+
+    cache_zip = cache_dir / "HARTH.zip"
+    if not cache_zip.exists():
+        _download_url(
+            "https://archive.ics.uci.edu/static/public/779/harth.zip",
+            cache_zip, "HARTH",
+        )
+
+    sensor_cols = ["back_x", "back_y", "back_z", "thigh_x", "thigh_y", "thigh_z"]
+    raw_streams = []
+    observed_labels = set()
+    with zipfile.ZipFile(cache_zip) as zf:
+        csv_files = sorted(n for n in zf.namelist()
+                           if n.lower().endswith(".csv") and "__macosx" not in n.lower())
+        if not csv_files:
+            raise RuntimeError("HARTH ZIP contains no CSV recordings")
+        for fname in csv_files:
+            with zf.open(fname) as src:
+                df = pd.read_csv(src)
+            if not set(sensor_cols + ["label"]).issubset(df.columns):
+                continue
+            subject = Path(fname).stem
+            values = df[sensor_cols].to_numpy(dtype=np.float32)
+            original_labels = df["label"].to_numpy(dtype=np.int64)
+            observed_labels.update(np.unique(original_labels).tolist())
+            raw_streams.append((subject, subject, values, original_labels))
+    label_values = np.asarray(sorted(observed_labels), dtype=np.int64)
+    label_map = {int(label): i for i, label in enumerate(label_values)}
+    streams = [(s, sess, x, np.searchsorted(label_values, y).astype(np.int64))
+               for s, sess, x, y in raw_streams]
+    task_t: TaskType = "multiclass" if task == "auto" else task
+    return _make_subject_window_splits(
+        streams, sensor_cols=sensor_cols, task=task_t, name="HARTH",
+        dataset_id=-13, raw_n_rows=sum(len(x[2]) for x in raw_streams),
+        source_metadata={
+            "source": "UCI_HARTH",
+            "sampling_frequency_hz": 50,
+            "activity_label_map": {str(k): v for k, v in label_map.items()},
+        },
+        fixed_subject_partitions={
+            # Chosen from label availability only so every partition contains
+            # rare activity 140; no model scores are used in this choice.
+            "train": ["S006", "S008", "S009", "S010", "S012", "S013", "S014",
+                      "S016", "S017", "S019", "S021", "S022", "S027", "S028"],
+            "val": ["S015", "S020", "S023", "S026"],
+            "test": ["S018", "S024", "S025", "S029"],
+        },
+    )
+
+
+def _load_pamap2_uci(task, test_size, val_size, seed, cache_dir: Path):
+    """PAMAP2: raw wearable IMU signals, split by participant."""
+    import re
+    import zipfile
+
+    cache_zip = cache_dir / "PAMAP2_Dataset.zip"
+    if not cache_zip.exists():
+        _download_url(
+            "https://archive.ics.uci.edu/ml/machine-learning-databases/00231/PAMAP2_Dataset.zip",
+            cache_zip, "PAMAP2",
+        )
+
+    # Use the ±16 g accelerometer from hand, chest, and ankle: nine raw channels.
+    selected_idx = [4, 5, 6, 21, 22, 23, 38, 39, 40]
+    sensor_cols = [
+        "hand_x", "hand_y", "hand_z",
+        "chest_x", "chest_y", "chest_z",
+        "ankle_x", "ankle_y", "ankle_z",
+    ]
+    raw_streams = []
+    observed_labels = set()
+    with zipfile.ZipFile(cache_zip) as zf:
+        # PAMAP2 Optional recordings contain activities performed by only a
+        # subset of subjects; they would create unseen classes in group test.
+        dat_files = sorted(n for n in zf.namelist()
+                           if n.lower().endswith(".dat") and "/protocol/" in n.lower())
+        if not dat_files:
+            raise RuntimeError("PAMAP2 ZIP contains no DAT recordings")
+        for fname in dat_files:
+            with zf.open(fname) as src:
+                arr = np.loadtxt(src, dtype=np.float32)
+            match = re.search(r"subject(\\d+)", fname.lower())
+            subject = match.group(1) if match else Path(fname).stem
+            original_labels = arr[:, 1].astype(np.int64)
+            observed_labels.update(np.unique(original_labels[original_labels > 0]).tolist())
+            raw_streams.append((subject, Path(fname).stem, arr[:, selected_idx], original_labels))
+    label_values = np.asarray(sorted(observed_labels), dtype=np.int64)
+    label_map = {int(label): i for i, label in enumerate(label_values)}
+    streams = []
+    for subject, session, values, labels in raw_streams:
+        mapped = np.full(len(labels), -1, dtype=np.int64)
+        labeled = labels > 0
+        mapped[labeled] = np.searchsorted(label_values, labels[labeled])
+        streams.append((subject, session, values, mapped))
+    task_t: TaskType = "multiclass" if task == "auto" else task
+    return _make_subject_window_splits(
+        streams, sensor_cols=sensor_cols, task=task_t, name="PAMAP2",
+        dataset_id=-14, raw_n_rows=sum(len(x[2]) for x in raw_streams),
+        source_metadata={
+            "source": "UCI_PAMAP2",
+            "sampling_frequency_hz": 100,
+            "activity_label_map": {str(k): v for k, v in label_map.items()},
+            "raw_channels_used": "three_IMU_accelerometers_16g",
+            "recording_subset": "Protocol",
+        },
+        stride=16,
+        fixed_subject_partitions={
+            # Protocol activities are jointly covered in all partitions.
+            "train": ["subject102", "subject105", "subject106", "subject107", "subject109"],
+            "val": ["subject103", "subject108"],
+            "test": ["subject101", "subject104"],
+        },
+    )
+
 
 def _load_emg_gestures_uci(task, test_size, val_size, seed, cache_dir: Path):
     """EMG Hand Gestures — UCI Senz3D dataset (subset).
@@ -581,21 +1042,13 @@ def _load_emg_gestures_uci(task, test_size, val_size, seed, cache_dir: Path):
                 print(f"  [EMG] URL failed ({e}), trying next …")
 
         if not downloaded:
-            # Generate a synthetic EMG-like dataset as last resort
-            print("[Data] EMG: all URLs failed — generating synthetic EMG proxy dataset")
-            rng_np = np.random.default_rng(42)
-            n = 6000
-            # 8 electrodes × 8 time steps = 64 features
-            feats = rng_np.normal(0, 1, (n, 64)).astype(np.float32)
-            # Add class-specific patterns (simulate 5 gesture classes)
-            labels = rng_np.integers(0, 5, n)
-            for cls in range(5):
-                mask = labels == cls
-                feats[mask, cls * 12:(cls + 1) * 12] += 2.0  # class separability
-            df = pd.DataFrame(feats, columns=[f"emg_{i}" for i in range(64)])
-            df["label"] = labels
-            df.to_csv(cache_csv, index=False)
-            print(f"  Synthetic EMG proxy: {n} rows × 64 features, 5 classes")
+            raise RuntimeError(
+                "[EMG Gestures] All download URLs failed — cannot load dataset.\n"
+                "Tried:\n" + "\n".join(f"  {u}" for u in urls) + "\n"
+                "Fix: download the dataset manually and place it at:\n"
+                f"  {cache_csv}\n"
+                "Format: CSV with columns emg_0..emg_63 + label"
+            )
 
     df = pd.read_csv(cache_csv)
     target_col = "label" if "label" in df.columns else df.columns[-1]
@@ -610,6 +1063,7 @@ def _load_emg_gestures_uci(task, test_size, val_size, seed, cache_dir: Path):
           f"classes={np.unique(y_arr).tolist()}")
     return _make_splits(X, y_arr, task_t, num_cols, cat_cols, "EMG_Gestures", -12,
                         test_size, val_size, seed)
+
 
 def _load_elec2(task, test_size, val_size, seed, cache_dir: Path):
     """ELEC2 electricity price direction — concept-drift benchmark.
@@ -697,30 +1151,12 @@ def _load_elec2(task, test_size, val_size, seed, cache_dir: Path):
                 except Exception as e:
                     print(f"  URL {url} failed: {e}")
 
-        # Source 3: synthetic ELEC2-like dataset
         if df is None:
-            print("[Data] ELEC2: all sources failed — generating synthetic proxy")
-            rng_np = np.random.default_rng(42)
-            n = 45000
-            period = (np.arange(n) % 48).astype(np.float32) / 48.0
-            dow = (np.arange(n) // 48 % 7).astype(np.float32) / 7.0
-            nsw_price = rng_np.lognormal(0, 0.5, n).astype(np.float32)
-            vic_price = nsw_price * rng_np.uniform(0.8, 1.2, n).astype(np.float32)
-            nsw_demand = rng_np.normal(1.0, 0.3, n).astype(np.float32)
-            vic_demand = rng_np.normal(1.0, 0.3, n).astype(np.float32)
-            transfer = rng_np.normal(0, 0.2, n).astype(np.float32)
-            # Price direction: UP if next period > current
-            price_diff = np.diff(nsw_price, prepend=nsw_price[0])
-            y_synth = (price_diff > 0).astype(np.int64)
-            df = pd.DataFrame({
-                "period": period, "day": dow,
-                "nswprice": nsw_price, "nswdemand": nsw_demand,
-                "vicprice": vic_price, "vicdemand": vic_demand,
-                "transfer": transfer,
-                "class": y_synth,
-            })
-            df.to_csv(cache_csv, index=False)
-            print(f"  Synthetic ELEC2 proxy: {n} rows × 7 features, binary")
+            raise RuntimeError(
+                "[ELEC2] All download sources failed — cannot load dataset.\n"
+                "Fix: download from https://www.openml.org/d/151 and place CSV at:\n"
+                f"  {cache_csv}"
+            )
 
     target_col = "class" if "class" in df.columns else df.columns[-1]
     X = df.drop(columns=[target_col]).copy()
@@ -733,13 +1169,26 @@ def _load_elec2(task, test_size, val_size, seed, cache_dir: Path):
     task_t: TaskType = "binary" if task == "auto" else task
     y_arr = pd.Series(y_raw).astype("category").cat.codes.to_numpy(dtype=np.int64)
 
+    lag_steps = [1, 2, 3, 6, 12, 24, 48]
+    window_sizes = [6, 12, 24, 48]
+    X, y_arr, ts_features = _make_lagged_timeseries_frame(
+        X,
+        y_arr,
+        lag_steps=lag_steps,
+        window_sizes=window_sizes,
+        include_diff1=True,
+    )
+
     num_cols = list(X.columns)
     cat_cols: List[str] = []
 
     print(f"[Data] ELEC2: {len(X)} rows × {len(num_cols)} features  "
           f"balance={dict(zip(*np.unique(y_arr, return_counts=True)))}")
+    # ELEC2 is already in chronological order — use temporal split to avoid look-ahead leakage
     return _make_splits(X, y_arr, task_t, num_cols, cat_cols, "ELEC2", -13,
-                        test_size, val_size, seed)
+                        test_size, val_size, seed, temporal=True,
+                        feature_engineering=ts_features)
+
 
 # ---------------------------------------------------------------------------
 # CSV loader
@@ -786,6 +1235,7 @@ def load_csv_raw(
     return _make_splits(X, y_arr, task_t, num_cols, cat_cols,
                         name, -4, test_size, val_size, seed)
 
+
 # ---------------------------------------------------------------------------
 # Unified entry point
 # ---------------------------------------------------------------------------
@@ -828,6 +1278,7 @@ def load_raw(
     else:
         raise ValueError(f"Unknown source: {source!r}. Use 'openml', 'builtin', or 'csv'.")
 
+
 # ---------------------------------------------------------------------------
 # Legacy interface (used by v1 baselines)
 # ---------------------------------------------------------------------------
@@ -848,6 +1299,7 @@ class TabularData:
     cat_cardinalities: List[int]
     task: TaskType
     n_classes: int
+
 
 def load_openml_dataset(openml_id, task="auto", test_size=0.2, val_size=0.2, seed=42):
     """Backward-compatible loader: applies the default Preprocessor."""

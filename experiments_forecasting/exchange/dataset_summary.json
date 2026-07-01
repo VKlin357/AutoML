@@ -1,0 +1,27 @@
+{
+  "dataset_name": "exchange",
+  "task": "regression",
+  "target_col": "currency_7",
+  "target_idx": 7,
+  "n_channels": 8,
+  "all_channels": [
+    "currency_0",
+    "currency_1",
+    "currency_2",
+    "currency_3",
+    "currency_4",
+    "currency_5",
+    "currency_6",
+    "currency_7"
+  ],
+  "lookback": 96,
+  "horizon": 1,
+  "freq": "d",
+  "T_total": 7588,
+  "n_train": 5215,
+  "n_val": 759,
+  "n_test": 1518,
+  "n_features": 768,
+  "split_strategy": "chronological_no_leakage",
+  "normalization": "standard_fit_on_train"
+}

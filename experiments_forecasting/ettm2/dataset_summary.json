@@ -1,0 +1,26 @@
+{
+  "dataset_name": "ettm2",
+  "task": "regression",
+  "target_col": "OT",
+  "target_idx": 6,
+  "n_channels": 7,
+  "all_channels": [
+    "HUFL",
+    "HULL",
+    "MUFL",
+    "MULL",
+    "LUFL",
+    "LULL",
+    "OT"
+  ],
+  "lookback": 96,
+  "horizon": 1,
+  "freq": "15min",
+  "T_total": 69680,
+  "n_train": 48680,
+  "n_val": 6967,
+  "n_test": 13937,
+  "n_features": 672,
+  "split_strategy": "chronological_no_leakage",
+  "normalization": "standard_fit_on_train"
+}

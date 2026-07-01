@@ -1,0 +1,34 @@
+{
+  "openml_id": 1169,
+  "name": "airlines",
+  "n_rows": 539383,
+  "n_features": 7,
+  "n_num": 3,
+  "n_cat": 4,
+  "task": "binary",
+  "n_classes": 2,
+  "n_train": 345204,
+  "n_val": 86302,
+  "n_test": 107877,
+  "num_cols_preview": [
+    "Flight",
+    "Time",
+    "Length"
+  ],
+  "cat_cols_preview": [
+    "Airline",
+    "AirportFrom",
+    "AirportTo",
+    "DayOfWeek"
+  ],
+  "class_balance": {
+    "0": 191436,
+    "1": 153768
+  },
+  "cat_cardinalities_preview": [
+    19,
+    294,
+    294,
+    8
+  ]
+}

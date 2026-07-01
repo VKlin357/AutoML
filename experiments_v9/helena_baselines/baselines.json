@@ -1,0 +1,29 @@
+{
+  "catboost": {
+    "primary": 0.37239263803680983,
+    "acc": 0.37239263803680983,
+    "balanced_acc": 0.22089153104539969,
+    "macro_f1": 0.23169702626287428,
+    "logloss": 2.6255790686007168,
+    "search_score": 0.31082406071996127,
+    "test_primary": 0.37239263803680983,
+    "test_metrics": {
+      "acc": 0.37239263803680983,
+      "balanced_acc": 0.22089153104539969,
+      "macro_f1": 0.23169702626287428,
+      "logloss": 2.6255790686007168,
+      "search_score": 0.31082406071996127
+    },
+    "val_primary": 0.37691717791411045,
+    "val_metrics": {
+      "acc": 0.37691717791411045,
+      "balanced_acc": 0.21512972679960302,
+      "macro_f1": 0.22563569301919523,
+      "logloss": 2.601189389529206,
+      "search_score": 0.3141565177149759
+    },
+    "evaluation_split": "test",
+    "early_stopping_split": "validation",
+    "seconds": 1196.6960501670837
+  }
+}

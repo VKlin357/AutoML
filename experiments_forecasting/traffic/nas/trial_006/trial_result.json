@@ -1,0 +1,37 @@
+{
+  "trial_id": 6,
+  "op": "random_warmup",
+  "config": {
+    "arch": {
+      "family": "transformer",
+      "patch_size": 16,
+      "d_model": 256,
+      "n_heads": 2,
+      "n_layers": 3,
+      "dropout": 0.2,
+      "ffn_factor": 2.0
+    },
+    "train": {
+      "lr": 0.0003,
+      "batch_size": 128,
+      "epochs": 200,
+      "patience": 15,
+      "optimizer": "adamw",
+      "weight_decay": 0.0001,
+      "scheduler": "none",
+      "grad_clip": 0.0,
+      "use_amp": false
+    }
+  },
+  "primary": -1000000000.0,
+  "val_mse": 1000000000.0,
+  "val_mae": 1000000000.0,
+  "test_mse": 1000000000.0,
+  "test_mae": 1000000000.0,
+  "val_history": [],
+  "epochs_run": 0,
+  "n_params": 0,
+  "seconds": 0.018388748168945312,
+  "early_stopped": false,
+  "error": "Efficient attention cannot produce valid seed and offset outputs when the batch size exceeds (65535)."
+}

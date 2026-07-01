@@ -1,0 +1,30 @@
+{
+  "preprocess": {
+    "num_encoder": "quantile",
+    "cat_encoder": "onehot"
+  },
+  "arch": {
+    "family": "autoint",
+    "n_blocks": 4,
+    "d_token": 64,
+    "n_heads": 4,
+    "attn_dropout": 0.3,
+    "ffn_factor": 2.0,
+    "ffn_dropout": 0.3,
+    "activation": "gelu"
+  },
+  "train": {
+    "optimizer": "adam",
+    "lr": 0.005,
+    "weight_decay": 0.0001,
+    "scheduler": "plateau",
+    "batch_size": 128,
+    "epochs": 100,
+    "patience": 10,
+    "label_smoothing": 0.0,
+    "grad_clip": 0.0,
+    "use_amp": true,
+    "feature_noise_std": 0.0,
+    "mixup_alpha": 0.0
+  }
+}

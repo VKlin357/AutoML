@@ -1,0 +1,32 @@
+{
+  "openml_id": 40700,
+  "name": "cars1",
+  "n_rows": 392,
+  "n_features": 7,
+  "n_num": 6,
+  "n_cat": 1,
+  "task": "binary",
+  "n_classes": 2,
+  "n_train": 250,
+  "n_val": 63,
+  "n_test": 79,
+  "num_cols_preview": [
+    "MPG",
+    "cubicInches",
+    "horsepower",
+    "weightLbs",
+    "time-to-sixty",
+    "year"
+  ],
+  "cat_cols_preview": [
+    "cylinders"
+  ],
+  "class_balance": {
+    "0": 43,
+    "1": 50,
+    "2": 157
+  },
+  "cat_cardinalities_preview": [
+    6
+  ]
+}

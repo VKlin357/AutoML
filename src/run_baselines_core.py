@@ -28,19 +28,39 @@ from .train_nn import train_trial
 from .multi_fidelity import evaluate_at_rung, FULL
 from .utils import ensure_dir, save_json, seed_everything
 
+
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
-def _concat_num_cat(data) -> tuple:
-    """Return (X_train, X_val, y_train, y_val) with cat columns appended as float."""
+def _concat_num_cat(data, ts_dataset: Optional[str] = None) -> tuple:
+    """Return train/validation/test arrays with cat columns appended as float.
+
+    If ts_dataset is given (e.g. 'harth', 'pamap2'), applies time-series
+    feature engineering on top of the raw flat features before returning.
+    """
     Xtr = np.concatenate(
         [data.X_train_num, data.X_train_cat.astype(np.float32)], axis=1
     )
     Xva = np.concatenate(
         [data.X_val_num, data.X_val_cat.astype(np.float32)], axis=1
     )
-    return Xtr, Xva, data.y_train, data.y_val
+    Xte = np.concatenate(
+        [data.X_test_num, data.X_test_cat.astype(np.float32)], axis=1
+    )
+    if ts_dataset:
+        from .timeseries_features import make_ts_features_combined, TS_CONFIGS
+        ds = ts_dataset.lower()
+        if ds in TS_CONFIGS:
+            print(f"[TS-FE] Applying time-series feature engineering for '{ds}' ...")
+            Xtr = make_ts_features_combined(Xtr, ds)
+            Xva = make_ts_features_combined(Xva, ds)
+            Xte = make_ts_features_combined(Xte, ds)
+            print(f"[TS-FE] Feature shape: {Xtr.shape[1]} (raw + engineered)")
+        else:
+            print(f"[TS-FE] Warning: '{ds}' not in TS_CONFIGS, skipping FE")
+    return Xtr, Xva, Xte, data.y_train, data.y_val, data.y_test
+
 
 # ---------------------------------------------------------------------------
 # CatBoost
@@ -75,8 +95,10 @@ def _load_tabular_data(openml_id, task, seed,
     )
     return data, summary
 
+
 def run_catboost_baseline(openml_id: int, task: str, out_dir: str, seed: int = 42,
-                          source: str = "openml", builtin_name=None, csv_path=None) -> Dict:
+                          source: str = "openml", builtin_name=None, csv_path=None,
+                          ts_dataset: Optional[str] = None) -> Dict:
     seed_everything(seed)
     out_dir_p = ensure_dir(out_dir)
     data, summary = _load_tabular_data(openml_id, task, seed, source, builtin_name, csv_path)
@@ -84,7 +106,7 @@ def run_catboost_baseline(openml_id: int, task: str, out_dir: str, seed: int = 4
 
     from catboost import CatBoostClassifier, CatBoostRegressor
 
-    Xtr, Xva, ytr, yva = _concat_num_cat(data)
+    Xtr, Xva, Xte, ytr, yva, yte = _concat_num_cat(data, ts_dataset=ts_dataset)
     t0 = time.time()
 
     cb_common = dict(
@@ -94,30 +116,43 @@ def run_catboost_baseline(openml_id: int, task: str, out_dir: str, seed: int = 4
     if data.task == "regression":
         m = CatBoostRegressor(loss_function="RMSE", **cb_common)
         m.fit(Xtr, ytr, eval_set=(Xva, yva), use_best_model=True)
-        pred = m.predict(Xva)
-        met = compute_metrics("regression", yva, y_pred=pred)
+        val_met = compute_metrics("regression", yva, y_pred=m.predict(Xva))
+        test_met = compute_metrics("regression", yte, y_pred=m.predict(Xte))
     elif data.task == "binary":
         m = CatBoostClassifier(loss_function="Logloss", **cb_common)
         m.fit(Xtr, ytr, eval_set=(Xva, yva), use_best_model=True)
-        proba = m.predict_proba(Xva)[:, 1]
-        met = compute_metrics("binary", yva, y_pred_proba=proba)
+        val_met = compute_metrics("binary", yva, y_pred_proba=m.predict_proba(Xva)[:, 1])
+        test_met = compute_metrics("binary", yte, y_pred_proba=m.predict_proba(Xte)[:, 1])
     else:
         m = CatBoostClassifier(loss_function="MultiClass", **cb_common)
         m.fit(Xtr, ytr, eval_set=(Xva, yva), use_best_model=True)
-        proba = m.predict_proba(Xva)
-        met = compute_metrics("multiclass", yva, y_pred_proba=proba)
+        val_met = compute_metrics("multiclass", yva, y_pred_proba=m.predict_proba(Xva))
+        test_met = compute_metrics("multiclass", yte, y_pred_proba=m.predict_proba(Xte))
 
-    result = {"primary": met.primary, **met.metrics, "seconds": time.time() - t0}
+    result = {
+        "primary": test_met.primary,
+        **test_met.metrics,
+        "test_primary": test_met.primary,
+        "test_metrics": test_met.metrics,
+        "val_primary": val_met.primary,
+        "val_metrics": val_met.metrics,
+        "evaluation_split": "test",
+        "early_stopping_split": "validation",
+        "seconds": time.time() - t0,
+    }
     save_json(out_dir_p / "baseline_catboost.json", result)
-    print(f"[CatBoost] primary={met.primary:.5f}  ({time.time()-t0:.1f}s)")
+    print(f"[CatBoost] test_primary={test_met.primary:.5f}  "
+          f"val_primary={val_met.primary:.5f}  ({time.time()-t0:.1f}s)")
     return result
+
 
 # ---------------------------------------------------------------------------
 # LightGBM
 # ---------------------------------------------------------------------------
 
 def run_lightgbm_baseline(openml_id: int, task: str, out_dir: str, seed: int = 42,
-                          source: str = "openml", builtin_name=None, csv_path=None) -> Dict:
+                          source: str = "openml", builtin_name=None, csv_path=None,
+                          ts_dataset: Optional[str] = None) -> Dict:
     seed_everything(seed)
     out_dir_p = ensure_dir(out_dir)
     data, summary = _load_tabular_data(openml_id, task, seed, source, builtin_name, csv_path)
@@ -129,7 +164,7 @@ def run_lightgbm_baseline(openml_id: int, task: str, out_dir: str, seed: int = 4
         print("[LightGBM] lightgbm not installed; skipping.")
         return {"primary": None, "note": "lightgbm not installed"}
 
-    Xtr, Xva, ytr, yva = _concat_num_cat(data)
+    Xtr, Xva, Xte, ytr, yva, yte = _concat_num_cat(data, ts_dataset=ts_dataset)
     t0 = time.time()
 
     common = dict(
@@ -144,25 +179,37 @@ def run_lightgbm_baseline(openml_id: int, task: str, out_dir: str, seed: int = 4
         from lightgbm import LGBMRegressor
         m = LGBMRegressor(**common)
         m.fit(Xtr, ytr, eval_set=[(Xva, yva)], callbacks=lgb_callbacks)
-        pred = m.predict(Xva)
-        met = compute_metrics("regression", yva, y_pred=pred)
+        val_met = compute_metrics("regression", yva, y_pred=m.predict(Xva))
+        test_met = compute_metrics("regression", yte, y_pred=m.predict(Xte))
     elif data.task == "binary":
         from lightgbm import LGBMClassifier
         m = LGBMClassifier(objective="binary", **common)
         m.fit(Xtr, ytr, eval_set=[(Xva, yva)], callbacks=lgb_callbacks)
-        proba = m.predict_proba(Xva)[:, 1]
-        met = compute_metrics("binary", yva, y_pred_proba=proba)
+        val_met = compute_metrics("binary", yva, y_pred_proba=m.predict_proba(Xva)[:, 1])
+        test_met = compute_metrics("binary", yte, y_pred_proba=m.predict_proba(Xte)[:, 1])
     else:
         from lightgbm import LGBMClassifier
         m = LGBMClassifier(objective="multiclass", num_class=data.n_classes, **common)
         m.fit(Xtr, ytr.astype(int), eval_set=[(Xva, yva.astype(int))], callbacks=lgb_callbacks)
-        proba = m.predict_proba(Xva)
-        met = compute_metrics("multiclass", yva, y_pred_proba=proba)
+        val_met = compute_metrics("multiclass", yva, y_pred_proba=m.predict_proba(Xva))
+        test_met = compute_metrics("multiclass", yte, y_pred_proba=m.predict_proba(Xte))
 
-    result = {"primary": met.primary, **met.metrics, "seconds": time.time() - t0}
+    result = {
+        "primary": test_met.primary,
+        **test_met.metrics,
+        "test_primary": test_met.primary,
+        "test_metrics": test_met.metrics,
+        "val_primary": val_met.primary,
+        "val_metrics": val_met.metrics,
+        "evaluation_split": "test",
+        "early_stopping_split": "validation",
+        "seconds": time.time() - t0,
+    }
     save_json(out_dir_p / "baseline_lightgbm.json", result)
-    print(f"[LightGBM] primary={met.primary:.5f}  ({time.time()-t0:.1f}s)")
+    print(f"[LightGBM] test_primary={test_met.primary:.5f}  "
+          f"val_primary={val_met.primary:.5f}  ({time.time()-t0:.1f}s)")
     return result
+
 
 # ---------------------------------------------------------------------------
 # Random Neural Architecture Search (ablation baseline)
@@ -256,15 +303,42 @@ def run_random_nas_baseline(
         save_json(out_dir_p / "trials_random_index.json", {"trials": all_trials})
 
     best = max(all_trials, key=lambda x: x["primary"])
+    selected_cfg = best["config"]
+    pre = make_preprocessor(selected_cfg.get("preprocess", {}))
+    prepared = pre.fit_transform(
+        raw.X_train, raw.X_val, raw.X_test,
+        raw.y_train, raw.y_val, raw.y_test,
+        raw.num_cols, raw.cat_cols, raw.task, raw.n_classes,
+    )
+    final_eval = train_trial(
+        cfg=selected_cfg,
+        X_train_num=prepared.X_train_num, X_train_cat=prepared.X_train_cat,
+        y_train=prepared.y_train,
+        X_val_num=prepared.X_val_num, X_val_cat=prepared.X_val_cat,
+        y_val=prepared.y_val,
+        X_test_num=prepared.X_test_num, X_test_cat=prepared.X_test_cat,
+        y_test=prepared.y_test,
+        task=prepared.task, n_classes=prepared.n_classes,
+        cat_cardinalities=prepared.cat_cardinalities,
+        seed=seed, save_model=False, device=device,
+    )
     result_dict = {
-        "primary": best_primary,
+        "primary": final_eval.test_primary,
+        "test_primary": final_eval.test_primary,
+        "test_metrics": final_eval.test_metrics,
+        "validation_best_primary": best_primary,
+        "selected_val_primary": final_eval.primary,
+        "evaluation_split": "test",
+        "selection_split": "validation",
         "best_trial": best,
         "all_trials": all_trials,
         "budget": budget,
     }
     save_json(out_dir_p / "baseline_random_search.json", result_dict)
-    print(f"[Random NAS] best_primary={best_primary:.5f}")
+    print(f"[Random NAS] test_primary={final_eval.test_primary:.5f}  "
+          f"validation_best={best_primary:.5f}")
     return result_dict
+
 
 # ---------------------------------------------------------------------------
 # Unified runner (all baselines at once)
@@ -282,9 +356,11 @@ def run_baselines(
     source: str = "openml",
     builtin_name=None,
     csv_path=None,
+    ts_dataset: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Run CatBoost + optional LightGBM + optional random NAS, save all results."""
-    kw = dict(source=source, builtin_name=builtin_name, csv_path=csv_path)
+    kw = dict(source=source, builtin_name=builtin_name, csv_path=csv_path,
+              ts_dataset=ts_dataset)
     results = {}
     results["catboost"] = run_catboost_baseline(openml_id, task, out_dir, seed, **kw)
     if run_lgbm:
@@ -292,7 +368,8 @@ def run_baselines(
     if run_random_nas:
         results["random_nas"] = run_random_nas_baseline(
             openml_id, task, out_dir, budget=random_nas_budget,
-            seed=seed, device=device, **kw
+            seed=seed, device=device,
+            source=source, builtin_name=builtin_name, csv_path=csv_path,
         )
     out_dir_p = ensure_dir(out_dir)
     save_json(out_dir_p / "baselines.json", results)

@@ -1,0 +1,29 @@
+{
+  "preprocess": {
+    "num_encoder": "quantile",
+    "cat_encoder": "embedding"
+  },
+  "arch": {
+    "family": "resmlp",
+    "n_blocks": 6,
+    "block_width": 168,
+    "dropout": 0.0464,
+    "activation": "relu",
+    "normalization": "layernorm",
+    "embedding_dim": 58
+  },
+  "train": {
+    "optimizer": "adam",
+    "lr": 0.000647,
+    "weight_decay": 0.001283,
+    "scheduler": "cosine",
+    "batch_size": 1024,
+    "epochs": 30,
+    "patience": 20,
+    "label_smoothing": 0.0586,
+    "grad_clip": 3.143,
+    "use_amp": false,
+    "feature_noise_std": 0.0723,
+    "mixup_alpha": 0.0769
+  }
+}

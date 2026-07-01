@@ -14,6 +14,7 @@ Workflow used by the orchestrator:
         surr.add(cfg, primary)
     surr.fit()                     # cheap: ~1s on 100 rows
 
+    # When the LLM gives us K candidates, we score them all and only
     # train the top ``keep`` ones at cheap rung.
     scores = [surr.score(c) for c in candidates]
 
@@ -29,6 +30,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import numpy as np
 
 from .search_space import featurize_config
+
 
 # ---------------------------------------------------------------------------
 # Lazy import: lightgbm is optional. If absent, fall back to sklearn GBR.
@@ -48,6 +50,7 @@ def _make_regressor():
             n_estimators=200, learning_rate=0.05, max_depth=3, random_state=0,
         )
 
+
 # ---------------------------------------------------------------------------
 # Featurization helper: align dicts with shared column space
 # ---------------------------------------------------------------------------
@@ -59,6 +62,7 @@ def _to_matrix(feat_dicts: List[Dict[str, float]]) -> Tuple[np.ndarray, List[str
         for j, k in enumerate(keys):
             X[i, j] = d.get(k, 0.0)
     return X, keys
+
 
 # ---------------------------------------------------------------------------
 # Surrogate class

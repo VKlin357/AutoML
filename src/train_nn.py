@@ -36,6 +36,7 @@ from .metrics import TaskType, compute_metrics
 from .models import make_model, count_params
 from .utils import ensure_dir, save_json
 
+
 # ---------------------------------------------------------------------------
 # Dataset
 # ---------------------------------------------------------------------------
@@ -59,6 +60,7 @@ class _TabDS(Dataset):
     def __len__(self): return int(self.y.shape[0])
     def __getitem__(self, i): return self.X_num[i], self.X_cat[i], self.y[i]
 
+
 # ---------------------------------------------------------------------------
 # Optimizer / scheduler / loss
 # ---------------------------------------------------------------------------
@@ -72,6 +74,7 @@ def _make_optim(params, name: str, lr: float, weight_decay: float):
     if name == "sgd_momentum":
         return torch.optim.SGD(params, lr=lr, momentum=0.9, nesterov=True, weight_decay=weight_decay)
     raise ValueError(f"Unknown optimizer: {name}")
+
 
 def _make_sched(opt, name: str, *, total_steps: int, max_lr: float, plateau_mode: str):
     name = name.lower()
@@ -93,6 +96,7 @@ def _make_sched(opt, name: str, *, total_steps: int, max_lr: float, plateau_mode
         )
     return None  # "none"
 
+
 def _make_loss(task: TaskType, label_smoothing: float):
     if task == "regression":
         return nn.MSELoss()
@@ -102,6 +106,7 @@ def _make_loss(task: TaskType, label_smoothing: float):
         return nn.BCEWithLogitsLoss()
     return nn.CrossEntropyLoss(label_smoothing=label_smoothing)
 
+
 # ---------------------------------------------------------------------------
 # Augmentations
 # ---------------------------------------------------------------------------
@@ -110,6 +115,7 @@ def _apply_feature_noise(x_num: torch.Tensor, std: float) -> torch.Tensor:
     if std <= 0 or x_num.numel() == 0:
         return x_num
     return x_num + torch.randn_like(x_num) * std
+
 
 def _mixup(x_num: torch.Tensor, x_cat: torch.Tensor, y: torch.Tensor,
            alpha: float, task: TaskType, n_classes: int = 0):
@@ -135,6 +141,7 @@ def _mixup(x_num: torch.Tensor, x_cat: torch.Tensor, y: torch.Tensor,
         y_mix = lam * y1 + (1 - lam) * y1[perm]
     return x_num_mix, x_cat, y_mix, lam
 
+
 def _loss_with_mixup(model, loss_fn, x_num, x_cat, y, task, train_cfg, mixup_alpha,
                      n_classes: int = 0):
     if mixup_alpha > 0 and task != "regression" and task != "binary":
@@ -158,6 +165,7 @@ def _loss_with_mixup(model, loss_fn, x_num, x_cat, y, task, train_cfg, mixup_alp
     logits = model(x_num, x_cat)
     return loss_fn(logits, y)
 
+
 # ---------------------------------------------------------------------------
 # Eval helpers
 # ---------------------------------------------------------------------------
@@ -180,9 +188,11 @@ def _predict(model, loader, task, device, use_amp):
         return torch.sigmoid(logits).numpy().reshape(-1), None
     return torch.softmax(logits, dim=1).numpy(), None
 
+
 class _null_ctx:
     def __enter__(self): return self
     def __exit__(self, *a): return False
+
 
 # ---------------------------------------------------------------------------
 # Main trainer (NEW interface)
@@ -199,8 +209,12 @@ class TrialResult:
     seconds: float
     early_stopped: bool
     val_probas: Optional[np.ndarray] = None   # val probabilities (for ensemble)
-    train_loss_history: List[float] = None
-    grad_norm_history: List[float] = None
+    test_primary: Optional[float] = None      # untouched holdout score, if supplied
+    test_metrics: Optional[Dict[str, float]] = None
+    test_probas: Optional[np.ndarray] = None
+    train_loss_history: List[float] = None    # train loss per epoch (for LLM feedback)
+    grad_norm_history: List[float] = None     # L2 gradient norm per epoch (for LLM feedback)
+
 
 def train_trial(
     *,
@@ -208,6 +222,7 @@ def train_trial(
     X_train_num, X_train_cat, y_train,
     X_val_num, X_val_cat, y_val,
     task: TaskType, n_classes: int, cat_cardinalities: List[int],
+    X_test_num=None, X_test_cat=None, y_test=None,
     out_dir: Optional[Path] = None,
     max_epochs: Optional[int] = None,       # multi-fidelity override
     data_frac: float = 1.0,                 # multi-fidelity subsample
@@ -260,6 +275,13 @@ def train_trial(
                               num_workers=0, pin_memory=(device == "cuda"))
     val_loader = DataLoader(val_ds, batch_size=max(bs, 1024), shuffle=False, drop_last=False,
                             num_workers=0, pin_memory=(device == "cuda"))
+    test_loader = None
+    if X_test_num is not None and X_test_cat is not None and y_test is not None:
+        test_ds = _TabDS(X_test_num, X_test_cat, y_test, task)
+        test_loader = DataLoader(
+            test_ds, batch_size=max(bs, 1024), shuffle=False, drop_last=False,
+            num_workers=0, pin_memory=(device == "cuda"),
+        )
 
     # Model
     model = make_model(
@@ -394,12 +416,24 @@ def train_trial(
     metrics = dict(m.metrics)
     metrics["primary"] = float(m.primary)
     metrics["search_score"] = float(m.search_score)
+    test_primary = None
+    test_metrics = None
+    test_proba = None
+    if test_loader is not None:
+        test_proba, test_pred = _predict(model, test_loader, task, device, use_amp)
+        tm = compute_metrics(task, y_test, y_pred_proba=test_proba, y_pred=test_pred)
+        test_primary = float(tm.primary)
+        test_metrics = dict(tm.metrics)
+        test_metrics["primary"] = test_primary
+        test_metrics["search_score"] = float(tm.search_score)
 
     if out_dir is not None:
         out_dir = ensure_dir(out_dir)
         if save_model:
             torch.save(model.state_dict(), out_dir / "model.pt")
         save_json(out_dir / "metrics.json", metrics)
+        if test_metrics is not None:
+            save_json(out_dir / "test_metrics.json", test_metrics)
         save_json(out_dir / "history.json", {
             "val_primary_by_epoch": history,
             "train_loss_by_epoch": train_loss_history,
@@ -415,9 +449,13 @@ def train_trial(
         seconds=float(time.time() - t0),
         early_stopped=early_stopped,
         val_probas=val_proba,
+        test_primary=test_primary,
+        test_metrics=test_metrics,
+        test_probas=test_proba,
         train_loss_history=train_loss_history,
         grad_norm_history=grad_norm_history,
     )
+
 
 # ---------------------------------------------------------------------------
 # Legacy interface (kept so v1 callers don't break)
@@ -437,6 +475,7 @@ class TrainConfig:
     epochs: int = 50
     patience: int = 8
     device: str = "cuda" if torch.cuda.is_available() else "cpu"
+
 
 def train_one_trial(
     *,

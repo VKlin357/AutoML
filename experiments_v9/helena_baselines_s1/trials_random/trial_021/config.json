@@ -1,0 +1,31 @@
+{
+  "preprocess": {
+    "num_encoder": "standard",
+    "cat_encoder": "embedding"
+  },
+  "arch": {
+    "family": "tabm",
+    "n_blocks": 2,
+    "width": 401,
+    "k": 15,
+    "dropout": 0.4108,
+    "head_dropout": 0.2878,
+    "activation": "gelu",
+    "normalization": "layernorm",
+    "embedding_dim": 32
+  },
+  "train": {
+    "optimizer": "adamw",
+    "lr": 0.008196,
+    "weight_decay": 0.004159,
+    "scheduler": "none",
+    "batch_size": 1024,
+    "epochs": 52,
+    "patience": 13,
+    "label_smoothing": 0.0876,
+    "grad_clip": 3.112,
+    "use_amp": true,
+    "feature_noise_std": 0.0424,
+    "mixup_alpha": 0.1725
+  }
+}

@@ -29,6 +29,7 @@ from sklearn.preprocessing import QuantileTransformer
 
 from .metrics import TaskType
 
+
 # ---------------------------------------------------------------------------
 # Returned arrays
 # ---------------------------------------------------------------------------
@@ -54,6 +55,7 @@ class PreparedSplit:
     task: TaskType
     n_classes: int
 
+
 # ---------------------------------------------------------------------------
 # Numeric encoders
 # ---------------------------------------------------------------------------
@@ -78,9 +80,11 @@ def _impute_num(train: pd.DataFrame, *others: pd.DataFrame, num_cols: List[str])
         out.append(o_filled)
     return tuple(out)
 
+
 def _sanitize(arr: np.ndarray) -> np.ndarray:
     """Replace NaN / ±inf with 0 / ±1e6. Works on any float array."""
     return np.nan_to_num(arr.astype(np.float32), nan=0.0, posinf=1e6, neginf=-1e6)
+
 
 def _encode_num_standard(tr: np.ndarray, *others) -> Tuple[np.ndarray, ...]:
     if tr.shape[1] == 0:
@@ -93,6 +97,7 @@ def _encode_num_standard(tr: np.ndarray, *others) -> Tuple[np.ndarray, ...]:
     for o in others:
         out.append((_sanitize(o) - mean) / std)
     return tuple(out)
+
 
 def _encode_num_quantile(tr: np.ndarray, *others) -> Tuple[np.ndarray, ...]:
     if tr.shape[1] == 0:
@@ -114,8 +119,10 @@ def _encode_num_quantile(tr: np.ndarray, *others) -> Tuple[np.ndarray, ...]:
         out.append(o_t)
     return tuple(out)
 
+
 def _encode_num_none(tr: np.ndarray, *others):
     return (tr, *others)
+
 
 # ---------------------------------------------------------------------------
 # Categorical encoders
@@ -148,6 +155,7 @@ def _encode_cat_embedding(
     for cols in other_arrs:
         out.append(np.concatenate(cols, axis=1))
     return out, cardinalities
+
 
 def _encode_cat_onehot(
     train: pd.DataFrame, *others: pd.DataFrame, cat_cols: List[str], num_train: np.ndarray,
@@ -190,6 +198,7 @@ def _encode_cat_onehot(
     cat_empty_train = np.zeros((len(train), 0), dtype=np.int64)
     cat_empty_others = [np.zeros((len(o), 0), dtype=np.int64) for o in others]
     return new_num_train, new_num_others, [cat_empty_train, *cat_empty_others], []
+
 
 # ---------------------------------------------------------------------------
 # Top-level Preprocessor
@@ -246,6 +255,7 @@ class Preprocessor:
             n_cat_after=int(tr_c.shape[1]),
             task=task, n_classes=n_classes,
         )
+
 
 def make_preprocessor(cfg: Dict) -> Preprocessor:
     return Preprocessor(

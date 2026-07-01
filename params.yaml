@@ -1,0 +1,10 @@
+# DVC parameters (mirror configs/experiment.yaml). Used by dvc.yaml templating.
+seed: 42
+data:
+  openml_id: 41168
+search:
+  budget: 40
+  warmup: 12
+  n_candidates: 20
+tracking:
+  backend: none

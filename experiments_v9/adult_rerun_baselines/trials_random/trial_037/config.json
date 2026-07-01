@@ -1,0 +1,29 @@
+{
+  "preprocess": {
+    "num_encoder": "none",
+    "cat_encoder": "onehot"
+  },
+  "arch": {
+    "family": "gated_tab",
+    "n_blocks": 1,
+    "block_width": 845,
+    "dropout": 0.3781,
+    "activation": "leaky_relu",
+    "normalization": "none",
+    "embedding_dim": 45
+  },
+  "train": {
+    "optimizer": "adam",
+    "lr": 0.0056,
+    "weight_decay": 0.0,
+    "scheduler": "none",
+    "batch_size": 1024,
+    "epochs": 33,
+    "patience": 18,
+    "label_smoothing": 0.0696,
+    "grad_clip": 1.667,
+    "use_amp": false,
+    "feature_noise_std": 0.1715,
+    "mixup_alpha": 0.1319
+  }
+}

@@ -1,0 +1,112 @@
+{
+  "add_layer": {
+    "count": 0,
+    "avg_improvement": null,
+    "positive_rate": null
+  },
+  "remove_layer": {
+    "count": 0,
+    "avg_improvement": null,
+    "positive_rate": null
+  },
+  "widen": {
+    "count": 0,
+    "avg_improvement": null,
+    "positive_rate": null
+  },
+  "narrow": {
+    "count": 0,
+    "avg_improvement": null,
+    "positive_rate": null
+  },
+  "increase_dropout": {
+    "count": 0,
+    "avg_improvement": null,
+    "positive_rate": null
+  },
+  "decrease_dropout": {
+    "count": 0,
+    "avg_improvement": null,
+    "positive_rate": null
+  },
+  "add_normalization": {
+    "count": 0,
+    "avg_improvement": null,
+    "positive_rate": null
+  },
+  "remove_normalization": {
+    "count": 0,
+    "avg_improvement": null,
+    "positive_rate": null
+  },
+  "reduce_lr": {
+    "count": 0,
+    "avg_improvement": null,
+    "positive_rate": null
+  },
+  "increase_lr": {
+    "count": 0,
+    "avg_improvement": null,
+    "positive_rate": null
+  },
+  "add_regularization": {
+    "count": 0,
+    "avg_improvement": null,
+    "positive_rate": null
+  },
+  "reduce_regularization": {
+    "count": 0,
+    "avg_improvement": null,
+    "positive_rate": null
+  },
+  "change_activation": {
+    "count": 0,
+    "avg_improvement": null,
+    "positive_rate": null
+  },
+  "add_augmentation": {
+    "count": 0,
+    "avg_improvement": null,
+    "positive_rate": null
+  },
+  "change_scheduler": {
+    "count": 0,
+    "avg_improvement": null,
+    "positive_rate": null
+  },
+  "switch_family": {
+    "count": 0,
+    "avg_improvement": null,
+    "positive_rate": null
+  },
+  "explore_lr_extreme_low": {
+    "count": 0,
+    "avg_improvement": null,
+    "positive_rate": null
+  },
+  "explore_lr_extreme_high": {
+    "count": 0,
+    "avg_improvement": null,
+    "positive_rate": null
+  },
+  "explore_deep": {
+    "count": 0,
+    "avg_improvement": null,
+    "positive_rate": null
+  },
+  "explore_shallow": {
+    "count": 0,
+    "avg_improvement": null,
+    "positive_rate": null
+  },
+  "extend_training": {
+    "count": 0,
+    "avg_improvement": null,
+    "positive_rate": null
+  },
+  "change_preprocessing": {
+    "count": 0,
+    "avg_improvement": null,
+    "positive_rate": null
+  }
+}

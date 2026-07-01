@@ -1,0 +1,30 @@
+{
+  "primary": 0.9853888403710261,
+  "auc": 0.9853888403710261,
+  "auc_defined": true,
+  "logloss": 0.1378472630108903,
+  "acc": 0.9463729673624726,
+  "balanced_acc": 0.9351557667404318,
+  "search_score": 0.9834495077098152,
+  "test_primary": 0.9853888403710261,
+  "test_metrics": {
+    "auc": 0.9853888403710261,
+    "auc_defined": true,
+    "logloss": 0.1378472630108903,
+    "acc": 0.9463729673624726,
+    "balanced_acc": 0.9351557667404318,
+    "search_score": 0.9834495077098152
+  },
+  "val_primary": 0.985969758427938,
+  "val_metrics": {
+    "auc": 0.985969758427938,
+    "auc_defined": true,
+    "logloss": 0.13491993976086405,
+    "acc": 0.9474316467252895,
+    "balanced_acc": 0.9374578637420474,
+    "search_score": 0.9841218698811672
+  },
+  "evaluation_split": "test",
+  "early_stopping_split": "validation",
+  "seconds": 47.831337451934814
+}

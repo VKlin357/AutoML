@@ -1,0 +1,32 @@
+# DVC pipeline. Reproduce end-to-end with:  dvc repro
+# Parameters live in params.yaml and are interpolated below.
+stages:
+  baselines:
+    cmd: python scripts/run_baselines.py --openml_id ${data.openml_id} --out_dir outputs/${data.openml_id}_baselines
+    params:
+      - data.openml_id
+      - seed
+    outs:
+      - outputs/${data.openml_id}_baselines
+
+  llm_nas:
+    cmd: python scripts/run_llm_nas.py --openml_id ${data.openml_id} --out_dir outputs/${data.openml_id}_llm --budget ${search.budget}
+    params:
+      - data.openml_id
+      - search.budget
+      - search.warmup
+      - search.n_candidates
+    deps:
+      - src
+    outs:
+      - outputs/${data.openml_id}_llm
+
+  results:
+    cmd: python scripts/build_results_table.py
+    deps:
+      - experiments_v9
+      - experiments_forecasting
+      - scripts/build_results_table.py
+    outs:
+      - results/results_classification.csv
+      - results/results_forecasting.csv

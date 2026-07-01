@@ -1,0 +1,245 @@
+{
+  "openml_id": 1590,
+  "name": "adult",
+  "n_rows": 48842,
+  "n_features": 14,
+  "n_num": 6,
+  "n_cat": 8,
+  "task": "binary",
+  "n_classes": 2,
+  "n_train": 31258,
+  "n_val": 7815,
+  "n_test": 9769,
+  "num_cols_preview": [
+    "age",
+    "fnlwgt",
+    "education-num",
+    "capital-gain",
+    "capital-loss",
+    "hours-per-week"
+  ],
+  "cat_cols_preview": [
+    "workclass",
+    "education",
+    "marital-status",
+    "occupation",
+    "relationship",
+    "race",
+    "sex",
+    "native-country"
+  ],
+  "class_balance": {
+    "0": 23779,
+    "1": 7479
+  },
+  "feature_stats": {
+    "age": {
+      "mean": 38.6044,
+      "std": 13.6947,
+      "min": 17.0,
+      "max": 90.0,
+      "median": 37.0
+    },
+    "fnlwgt": {
+      "mean": 190190.0183,
+      "std": 105637.7365,
+      "min": 12285.0,
+      "max": 1490400.0,
+      "median": 178478.0
+    },
+    "education-num": {
+      "mean": 10.0813,
+      "std": 2.5639,
+      "min": 1.0,
+      "max": 16.0,
+      "median": 10.0
+    },
+    "capital-gain": {
+      "mean": 1062.9124,
+      "std": 7435.142,
+      "min": 0.0,
+      "max": 99999.0,
+      "median": 0.0
+    },
+    "capital-loss": {
+      "mean": 88.068,
+      "std": 402.8944,
+      "min": 0.0,
+      "max": 4356.0,
+      "median": 0.0
+    },
+    "hours-per-week": {
+      "mean": 40.4215,
+      "std": 12.3177,
+      "min": 1.0,
+      "max": 99.0,
+      "median": 40.0
+    }
+  },
+  "categorical_stats": {
+    "workclass": {
+      "n_unique": 9,
+      "top5": {
+        "Private": 21701,
+        "Self-emp-not-inc": 2450,
+        "Local-gov": 1988,
+        "nan": 1798,
+        "State-gov": 1299
+      }
+    },
+    "education": {
+      "n_unique": 16,
+      "top5": {
+        "HS-grad": 10131,
+        "Some-college": 7031,
+        "Bachelors": 5110,
+        "Masters": 1720,
+        "Assoc-voc": 1311
+      }
+    },
+    "marital-status": {
+      "n_unique": 7,
+      "top5": {
+        "Married-civ-spouse": 14365,
+        "Never-married": 10319,
+        "Divorced": 4233,
+        "Widowed": 962,
+        "Separated": 958
+      }
+    },
+    "occupation": {
+      "n_unique": 15,
+      "top5": {
+        "Exec-managerial": 3951,
+        "Prof-specialty": 3944,
+        "Craft-repair": 3912,
+        "Adm-clerical": 3535,
+        "Sales": 3519
+      }
+    },
+    "relationship": {
+      "n_unique": 6,
+      "top5": {
+        "Husband": 12643,
+        "Not-in-family": 8013,
+        "Own-child": 4899,
+        "Unmarried": 3228,
+        "Wife": 1517
+      }
+    },
+    "race": {
+      "n_unique": 5,
+      "top5": {
+        "White": 26732,
+        "Black": 2964,
+        "Asian-Pac-Islander": 1002,
+        "Amer-Indian-Eskimo": 301,
+        "Other": 259
+      }
+    },
+    "sex": {
+      "n_unique": 2,
+      "top5": {
+        "Male": 20882,
+        "Female": 10376
+      }
+    },
+    "native-country": {
+      "n_unique": 41,
+      "top5": {
+        "United-States": 28010,
+        "Mexico": 615,
+        "nan": 560,
+        "Philippines": 189,
+        "Germany": 131
+      }
+    }
+  },
+  "class_distribution": {
+    "0": 0.7607,
+    "1": 0.2393
+  },
+  "class_imbalance_ratio": 3.18,
+  "sample_rows": [
+    {
+      "age": 24,
+      "workclass": "State-gov",
+      "fnlwgt": 232918.0,
+      "education": "Bachelors",
+      "education-num": 13,
+      "marital-status": "Never-married",
+      "occupation": "Prof-specialty",
+      "relationship": "Not-in-family",
+      "race": "White",
+      "sex": "Male",
+      "capital-gain": 0.0,
+      "capital-loss": 0.0,
+      "hours-per-week": 20,
+      "native-country": "United-States"
+    },
+    {
+      "age": 29,
+      "workclass": "Private",
+      "fnlwgt": 179008.0,
+      "education": "HS-grad",
+      "education-num": 9,
+      "marital-status": "Married-civ-spouse",
+      "occupation": "Farming-fishing",
+      "relationship": "Husband",
+      "race": "White",
+      "sex": "Male",
+      "capital-gain": 0.0,
+      "capital-loss": 0.0,
+      "hours-per-week": 55,
+      "native-country": "United-States"
+    },
+    {
+      "age": 23,
+      "workclass": "Private",
+      "fnlwgt": 129042.0,
+      "education": "HS-grad",
+      "education-num": 9,
+      "marital-status": "Never-married",
+      "occupation": "Machine-op-inspct",
+      "relationship": "Unmarried",
+      "race": "Black",
+      "sex": "Female",
+      "capital-gain": 0.0,
+      "capital-loss": 0.0,
+      "hours-per-week": 40,
+      "native-country": "United-States"
+    },
+    {
+      "age": 46,
+      "workclass": "Private",
+      "fnlwgt": 430278.0,
+      "education": "Masters",
+      "education-num": 14,
+      "marital-status": "Never-married",
+      "occupation": "Prof-specialty",
+      "relationship": "Not-in-family",
+      "race": "White",
+      "sex": "Male",
+      "capital-gain": 0.0,
+      "capital-loss": 0.0,
+      "hours-per-week": 40,
+      "native-country": "United-States"
+    },
+    {
+      "age": 22,
+      "workclass": "Private",
+      "fnlwgt": 305874.0,
+      "education": "HS-grad",
+      "education-num": 9,
+      "marital-status": "Married-civ-spouse",
+      "occupation": "Craft-repair",
+      "relationship": "Husband",
+      "race": "White",
+      "sex": "Male",
+      "capital-gain": 0.0,
+      "capital-loss": 0.0,
+      "hours-per-week": 60,
+      "native-country": "United-States"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "preprocess": {
+    "num_encoder": "quantile",
+    "cat_encoder": "embedding"
+  },
+  "arch": {
+    "family": "resmlp",
+    "n_blocks": 1,
+    "block_width": 666,
+    "dropout": 0.4676,
+    "activation": "gelu",
+    "normalization": "layernorm",
+    "embedding_dim": 31
+  },
+  "train": {
+    "optimizer": "sgd_momentum",
+    "lr": 0.001242,
+    "weight_decay": 0.060813,
+    "scheduler": "plateau",
+    "batch_size": 1024,
+    "epochs": 147,
+    "patience": 9,
+    "label_smoothing": 0.1423,
+    "grad_clip": 2.682,
+    "use_amp": false,
+    "feature_noise_std": 0.014,
+    "mixup_alpha": 0.1068
+  }
+}

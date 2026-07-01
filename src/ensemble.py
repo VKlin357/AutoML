@@ -25,6 +25,7 @@ from .preprocessing import make_preprocessor
 from .train_nn import train_trial
 from .utils import ensure_dir, save_json
 
+
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -39,6 +40,7 @@ def _softmax(x: np.ndarray) -> np.ndarray:
     x = x - x.max(axis=1, keepdims=True)
     e = np.exp(x)
     return e / e.sum(axis=1, keepdims=True)
+
 
 def _normalize_probas(p: np.ndarray, task: str) -> np.ndarray:
     """Normalize probability arrays from train_trial output.
@@ -63,8 +65,9 @@ def _normalize_probas(p: np.ndarray, task: str) -> np.ndarray:
         row_sums = p.sum(axis=1, keepdims=True)
         return p / np.where(row_sums == 0, 1.0, row_sums)
 
-def _retrain(cfg: Dict, raw: RawDataset, seed: int, device: Optional[str]) -> Optional[np.ndarray]:
-    """Re-train a config at full fidelity; return val probabilities."""
+
+def _retrain(cfg: Dict, raw: RawDataset, seed: int, device: Optional[str]) -> Optional[Dict[str, Any]]:
+    """Re-train a config; return validation and untouched-test predictions."""
     pre = make_preprocessor(cfg.get("preprocess", {}))
     prepared = pre.fit_transform(
         raw.X_train, raw.X_val, raw.X_test,
@@ -80,6 +83,9 @@ def _retrain(cfg: Dict, raw: RawDataset, seed: int, device: Optional[str]) -> Op
             X_val_num=prepared.X_val_num,
             X_val_cat=prepared.X_val_cat,
             y_val=prepared.y_val,
+            X_test_num=prepared.X_test_num,
+            X_test_cat=prepared.X_test_cat,
+            y_test=prepared.y_test,
             task=prepared.task,
             n_classes=prepared.n_classes,
             cat_cardinalities=prepared.cat_cardinalities,
@@ -87,11 +93,17 @@ def _retrain(cfg: Dict, raw: RawDataset, seed: int, device: Optional[str]) -> Op
             device=device,
             save_model=False,
         )
-        # Normalize: val_probas may be raw logits or sigmoid outputs
-        return _normalize_probas(res.val_probas, prepared.task)
+        return {
+            "val_probas": _normalize_probas(res.val_probas, prepared.task),
+            "test_probas": _normalize_probas(res.test_probas, prepared.task),
+            "val_primary": res.primary,
+            "test_primary": res.test_primary,
+            "test_metrics": res.test_metrics,
+        }
     except Exception as e:
         print(f"  [Ensemble] retrain failed: {e}")
         return None
+
 
 def _ensemble_score(probas_list: List[np.ndarray], weights: np.ndarray,
                     y_val: np.ndarray, task: str) -> float:
@@ -112,6 +124,22 @@ def _ensemble_score(probas_list: List[np.ndarray], weights: np.ndarray,
         avg = avg / np.where(row_sums == 0, 1.0, row_sums)
         m = compute_metrics("multiclass", y_val, y_pred_proba=avg)
     return m.primary
+
+
+def _ensemble_metrics(probas_list: List[np.ndarray], weights: np.ndarray,
+                      y_true: np.ndarray, task: str) -> Dict[str, Any]:
+    """Return complete metrics for a fixed weighted ensemble."""
+    weights = np.array(weights, dtype=np.float64)
+    weights = weights / weights.sum()
+    avg = np.tensordot(weights, np.stack(probas_list, axis=0), axes=[[0], [0]])
+    if task == "binary":
+        m = compute_metrics("binary", y_true, y_pred_proba=avg.reshape(-1))
+    else:
+        row_sums = avg.sum(axis=1, keepdims=True)
+        avg = avg / np.where(row_sums == 0, 1.0, row_sums)
+        m = compute_metrics("multiclass", y_true, y_pred_proba=avg)
+    return {"primary": float(m.primary), **m.metrics}
+
 
 # ---------------------------------------------------------------------------
 # Greedy ensemble selection (Caruana et al. 2004)
@@ -146,6 +174,7 @@ def _greedy_weights(probas_list: List[np.ndarray], y_val: np.ndarray,
     if counts.sum() == 0:
         return np.ones(n) / n
     return counts / counts.sum()
+
 
 # ---------------------------------------------------------------------------
 # Public API
@@ -190,50 +219,81 @@ def ensemble_top_k(
             break
 
     print(f"\n[Ensemble] Re-training top-{k} configs (method={method}) …")
-    probas_list: List[np.ndarray] = []
+    val_probas_list: List[np.ndarray] = []
+    test_probas_list: List[np.ndarray] = []
     member_scores: List[float] = []
     member_cfgs: List[Dict] = []
 
     for rec in seen_cfgs:
-        if len(probas_list) >= k:
+        if len(val_probas_list) >= k:
             break
         cfg = rec["config"]
         family = cfg.get("arch", {}).get("family", "?")
         print(f"  retrain trial_{rec['trial_id']:03d}  family={family}  "
               f"primary={rec['primary']:.5f}", flush=True)
-        p = _retrain(cfg, raw, seed=seed, device=device)
-        if p is not None:
-            probas_list.append(p)
+        predictions = _retrain(cfg, raw, seed=seed, device=device)
+        if predictions is not None:
+            val_probas_list.append(predictions["val_probas"])
+            test_probas_list.append(predictions["test_probas"])
             member_scores.append(rec["primary"])
             member_cfgs.append(cfg)
 
-    if not probas_list:
+    if not val_probas_list:
         print("[Ensemble] No models retrained successfully.")
         return {"primary": None, "method": method, "k": 0}
 
     y_val = raw.y_val
 
-    if method == "greedy" and len(probas_list) >= 2:
-        weights = _greedy_weights(probas_list, y_val, raw.task)
+    if method == "greedy" and len(val_probas_list) >= 2:
+        weights = _greedy_weights(val_probas_list, y_val, raw.task)
     else:
-        weights = np.ones(len(probas_list)) / len(probas_list)
+        weights = np.ones(len(val_probas_list)) / len(val_probas_list)
 
-    final_score = _ensemble_score(probas_list, weights, y_val, raw.task)
+    val_score = _ensemble_score(val_probas_list, weights, y_val, raw.task)
+    test_score = _ensemble_score(test_probas_list, weights, raw.y_test, raw.task)
+    val_metrics = _ensemble_metrics(val_probas_list, weights, y_val, raw.task)
+    test_metrics = _ensemble_metrics(test_probas_list, weights, raw.y_test, raw.task)
     elapsed = time.time() - t0
 
     result = {
-        "primary": float(final_score),
+        "primary": float(test_score),
+        "test_primary": float(test_score),
+        "val_primary": float(val_score),
+        "test_metrics": test_metrics,
+        "val_metrics": val_metrics,
+        "evaluation_split": "test",
+        "weight_selection_split": "validation",
         "method": method,
-        "k": len(probas_list),
+        "k": len(val_probas_list),
         "weights": weights.tolist(),
         "member_scores": member_scores,
         "seconds": elapsed,
     }
 
-    print(f"[Ensemble] primary={final_score:.5f}  "
-          f"(best_single={max(member_scores):.5f})  {elapsed:.0f}s")
+    print(f"[Ensemble] test_primary={test_score:.5f}  val_primary={val_score:.5f}  "
+          f"(member_best_val={max(member_scores):.5f})  {elapsed:.0f}s")
 
     if out_dir is not None:
         save_json(ensure_dir(out_dir) / "ensemble_result.json", result)
 
     return result
+
+
+def evaluate_config_on_holdout(
+    cfg: Dict,
+    raw: RawDataset,
+    *,
+    seed: int = 42,
+    device: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Evaluate one validation-selected config once on the untouched test set."""
+    result = _retrain(cfg, raw, seed=seed, device=device)
+    if result is None:
+        return {"test_primary": None, "val_primary": None, "evaluation_split": "test"}
+    return {
+        "test_primary": result["test_primary"],
+        "val_primary": result["val_primary"],
+        "test_metrics": result["test_metrics"],
+        "evaluation_split": "test",
+        "selection_split": "validation",
+    }

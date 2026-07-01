@@ -1,0 +1,29 @@
+{
+  "preprocess": {
+    "num_encoder": "quantile",
+    "cat_encoder": "embedding"
+  },
+  "arch": {
+    "family": "gated_tab",
+    "n_blocks": 5,
+    "block_width": 829,
+    "dropout": 0.3592,
+    "activation": "gelu",
+    "normalization": "layernorm",
+    "embedding_dim": 10
+  },
+  "train": {
+    "optimizer": "sgd_momentum",
+    "lr": 1.2e-05,
+    "weight_decay": 0.000551,
+    "scheduler": "none",
+    "batch_size": 1024,
+    "epochs": 193,
+    "patience": 9,
+    "label_smoothing": 0.0152,
+    "grad_clip": 3.453,
+    "use_amp": false,
+    "feature_noise_std": 0.0204,
+    "mixup_alpha": 0.309
+  }
+}

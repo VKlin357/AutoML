@@ -1,0 +1,26 @@
+{
+  "dataset_name": "etth2",
+  "task": "regression",
+  "target_col": "OT",
+  "target_idx": 6,
+  "n_channels": 7,
+  "all_channels": [
+    "HUFL",
+    "HULL",
+    "MUFL",
+    "MULL",
+    "LUFL",
+    "LULL",
+    "OT"
+  ],
+  "lookback": 96,
+  "horizon": 1,
+  "freq": "h",
+  "T_total": 17420,
+  "n_train": 12098,
+  "n_val": 1741,
+  "n_test": 3485,
+  "n_features": 672,
+  "split_strategy": "chronological_no_leakage",
+  "normalization": "standard_fit_on_train"
+}

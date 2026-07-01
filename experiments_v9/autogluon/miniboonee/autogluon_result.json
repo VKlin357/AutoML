@@ -1,0 +1,13 @@
+{
+  "test_primary": 0.9874315050192196,
+  "metrics": {
+    "auc": 0.9874315050192196,
+    "auc_defined": true,
+    "logloss": 0.12734051657270132,
+    "acc": 0.9504478529965786,
+    "balanced_acc": 0.9417476605890418,
+    "search_score": 0.9857230902331158
+  },
+  "seconds": 180.94342303276062,
+  "dataset": "miniboonee"
+}

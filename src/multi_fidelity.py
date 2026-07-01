@@ -27,6 +27,7 @@ import numpy as np
 from .preprocessing import PreparedSplit
 from .train_nn import TrialResult, train_trial
 
+
 # ---------------------------------------------------------------------------
 # Rung definitions
 # ---------------------------------------------------------------------------
@@ -44,6 +45,7 @@ FULL   = Rung(name="full",   max_epochs=None, data_frac=1.00, save_model=True)
 
 DEFAULT_LADDER: List[Rung] = [CHEAP, MEDIUM, FULL]
 
+
 @dataclass
 class FidelityResult:
     rung: str
@@ -51,12 +53,13 @@ class FidelityResult:
     search_score: float               # dense proxy for NAS selection (acc + bal_acc + f1 - logloss)
     metrics: Dict[str, float]
     history: List[float]              # val primary per epoch
-    train_loss_history: List[float]
+    train_loss_history: List[float]   # train loss per epoch — passed to LLM for overfitting analysis
     grad_norm_history: List[float]    # L2 gradient norm per epoch — signals instability / vanishing grads
     n_params: int
     epochs_run: int
     seconds: float
     early_stopped: bool
+
 
 def evaluate_at_rung(
     cfg: Dict[str, Any],
@@ -93,6 +96,7 @@ def evaluate_at_rung(
         seconds=res.seconds,
         early_stopped=res.early_stopped,
     )
+
 
 # ---------------------------------------------------------------------------
 # Promotion policy

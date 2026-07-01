@@ -1,0 +1,1844 @@
+{
+  "trials": [
+    {
+      "trial_id": 0,
+      "primary": 0.301284509202454,
+      "metrics": {
+        "acc": 0.301284509202454,
+        "balanced_acc": 0.12152540090752627,
+        "macro_f1": 0.10214772458940045,
+        "logloss": 2.9447583653217655,
+        "search_score": 0.22918038366248206,
+        "primary": 0.301284509202454
+      },
+      "rung": "full",
+      "n_params": 95701,
+      "arch_family": "mlp",
+      "config": {
+        "preprocess": {
+          "num_encoder": "none",
+          "cat_encoder": "embedding"
+        },
+        "arch": {
+          "family": "mlp",
+          "hidden_dims": [
+            221,
+            141,
+            84,
+            104,
+            108,
+            117
+          ],
+          "activation": "relu",
+          "dropout": 0.0179,
+          "normalization": "batchnorm",
+          "embedding_dim": 18
+        },
+        "train": {
+          "optimizer": "sgd_momentum",
+          "lr": 0.00064,
+          "weight_decay": 0.001028,
+          "scheduler": "none",
+          "batch_size": 256,
+          "epochs": 124,
+          "patience": 21,
+          "label_smoothing": 0.0556,
+          "grad_clip": 4.347,
+          "use_amp": false,
+          "feature_noise_std": 0.0319,
+          "mixup_alpha": 0.169
+        }
+      },
+      "seconds": 359.9993648529053
+    },
+    {
+      "trial_id": 1,
+      "primary": 0.388420245398773,
+      "metrics": {
+        "acc": 0.388420245398773,
+        "balanced_acc": 0.23136123492192354,
+        "macro_f1": 0.22953906642200456,
+        "logloss": 2.5363782005299798,
+        "search_score": 0.32672461239429995,
+        "primary": 0.388420245398773
+      },
+      "rung": "full",
+      "n_params": 364660,
+      "arch_family": "resmlp",
+      "config": {
+        "preprocess": {
+          "num_encoder": "quantile",
+          "cat_encoder": "embedding"
+        },
+        "arch": {
+          "family": "resmlp",
+          "n_blocks": 6,
+          "block_width": 168,
+          "dropout": 0.0464,
+          "activation": "relu",
+          "normalization": "layernorm",
+          "embedding_dim": 58
+        },
+        "train": {
+          "optimizer": "adam",
+          "lr": 0.000647,
+          "weight_decay": 0.001283,
+          "scheduler": "cosine",
+          "batch_size": 1024,
+          "epochs": 30,
+          "patience": 20,
+          "label_smoothing": 0.0586,
+          "grad_clip": 3.143,
+          "use_amp": false,
+          "feature_noise_std": 0.0723,
+          "mixup_alpha": 0.0769
+        }
+      },
+      "seconds": 17.53077244758606
+    },
+    {
+      "trial_id": 2,
+      "primary": 0.3735621165644172,
+      "metrics": {
+        "acc": 0.3735621165644172,
+        "balanced_acc": 0.2178084480273856,
+        "macro_f1": 0.21319832887492307,
+        "logloss": 2.5876102961573677,
+        "search_score": 0.3111544058838788,
+        "primary": 0.3735621165644172
+      },
+      "rung": "full",
+      "n_params": 389197,
+      "arch_family": "autoint",
+      "config": {
+        "preprocess": {
+          "num_encoder": "standard",
+          "cat_encoder": "embedding"
+        },
+        "arch": {
+          "family": "autoint",
+          "n_blocks": 3,
+          "d_token": 114,
+          "n_heads": 2,
+          "attn_dropout": 0.2956,
+          "ffn_factor": 2.711,
+          "ffn_dropout": 0.3,
+          "activation": "gelu"
+        },
+        "train": {
+          "optimizer": "adam",
+          "lr": 0.000229,
+          "weight_decay": 0.0,
+          "scheduler": "plateau",
+          "batch_size": 256,
+          "epochs": 181,
+          "patience": 11,
+          "label_smoothing": 0.1404,
+          "grad_clip": 3.418,
+          "use_amp": true,
+          "feature_noise_std": 0.127,
+          "mixup_alpha": 0.2137
+        }
+      },
+      "seconds": 117.39216113090515
+    },
+    {
+      "trial_id": 3,
+      "primary": 0.3690567484662577,
+      "metrics": {
+        "acc": 0.3690567484662577,
+        "balanced_acc": 0.21080884137794345,
+        "macro_f1": 0.21789009516072766,
+        "logloss": 2.64850769429623,
+        "search_score": 0.30594600967770635,
+        "primary": 0.3690567484662577
+      },
+      "rung": "full",
+      "n_params": 630236,
+      "arch_family": "ft_transformer",
+      "config": {
+        "preprocess": {
+          "num_encoder": "standard",
+          "cat_encoder": "embedding"
+        },
+        "arch": {
+          "family": "ft_transformer",
+          "n_blocks": 6,
+          "d_token": 100,
+          "n_heads": 4,
+          "ffn_factor": 3.064,
+          "attn_dropout": 0.0878,
+          "ffn_dropout": 0.1297,
+          "residual_dropout": 0.1537,
+          "activation": "gelu"
+        },
+        "train": {
+          "optimizer": "adamw",
+          "lr": 0.00292,
+          "weight_decay": 6e-06,
+          "scheduler": "cosine",
+          "batch_size": 256,
+          "epochs": 155,
+          "patience": 25,
+          "label_smoothing": 0.0629,
+          "grad_clip": 3.277,
+          "use_amp": true,
+          "feature_noise_std": 0.1829,
+          "mixup_alpha": 0.1835
+        }
+      },
+      "seconds": 215.55905652046204
+    },
+    {
+      "trial_id": 4,
+      "primary": 0.3955138036809816,
+      "metrics": {
+        "acc": 0.3955138036809816,
+        "balanced_acc": 0.2537960874678104,
+        "macro_f1": 0.2588136231017463,
+        "logloss": 2.6252435168258423,
+        "search_score": 0.3351283702783151,
+        "primary": 0.3955138036809816
+      },
+      "rung": "full",
+      "n_params": 6980140,
+      "arch_family": "resmlp",
+      "config": {
+        "preprocess": {
+          "num_encoder": "quantile",
+          "cat_encoder": "embedding"
+        },
+        "arch": {
+          "family": "resmlp",
+          "n_blocks": 5,
+          "block_width": 828,
+          "dropout": 0.2923,
+          "activation": "leaky_relu",
+          "normalization": "layernorm",
+          "embedding_dim": 18
+        },
+        "train": {
+          "optimizer": "adamw",
+          "lr": 0.000338,
+          "weight_decay": 0.0,
+          "scheduler": "cosine",
+          "batch_size": 128,
+          "epochs": 49,
+          "patience": 23,
+          "label_smoothing": 0.032,
+          "grad_clip": 3.402,
+          "use_amp": false,
+          "feature_noise_std": 0.077,
+          "mixup_alpha": 0.2384
+        }
+      },
+      "seconds": 99.92178726196289
+    },
+    {
+      "trial_id": 5,
+      "primary": 0.22747315950920247,
+      "metrics": {
+        "acc": 0.22747315950920247,
+        "balanced_acc": 0.06161126290136623,
+        "macro_f1": 0.04297910059904896,
+        "logloss": 3.478339595266299,
+        "search_score": 0.14948717297391667,
+        "primary": 0.22747315950920247
+      },
+      "rung": "cheap",
+      "n_params": 1832460,
+      "arch_family": "gated_tab",
+      "config": {
+        "preprocess": {
+          "num_encoder": "quantile",
+          "cat_encoder": "onehot"
+        },
+        "arch": {
+          "family": "gated_tab",
+          "n_blocks": 1,
+          "block_width": 760,
+          "dropout": 0.3604,
+          "activation": "silu",
+          "normalization": "none",
+          "embedding_dim": 25
+        },
+        "train": {
+          "optimizer": "adamw",
+          "lr": 7.6e-05,
+          "weight_decay": 0.0,
+          "scheduler": "cosine",
+          "batch_size": 512,
+          "epochs": 138,
+          "patience": 27,
+          "label_smoothing": 0.0357,
+          "grad_clip": 4.563,
+          "use_amp": false,
+          "feature_noise_std": 0.0597,
+          "mixup_alpha": 0.2556
+        }
+      },
+      "seconds": 1.20127534866333
+    },
+    {
+      "trial_id": 6,
+      "primary": 0.2160659509202454,
+      "metrics": {
+        "acc": 0.2160659509202454,
+        "balanced_acc": 0.0628040399116013,
+        "macro_f1": 0.05032677357640357,
+        "logloss": 3.7168916658346145,
+        "search_score": 0.13669942596466966,
+        "primary": 0.2160659509202454
+      },
+      "rung": "cheap",
+      "n_params": 8666292,
+      "arch_family": "resmlp",
+      "config": {
+        "preprocess": {
+          "num_encoder": "none",
+          "cat_encoder": "embedding"
+        },
+        "arch": {
+          "family": "resmlp",
+          "n_blocks": 6,
+          "block_width": 844,
+          "dropout": 0.0808,
+          "activation": "relu",
+          "normalization": "none",
+          "embedding_dim": 24
+        },
+        "train": {
+          "optimizer": "adam",
+          "lr": 1.1e-05,
+          "weight_decay": 0.01416,
+          "scheduler": "plateau",
+          "batch_size": 256,
+          "epochs": 24,
+          "patience": 10,
+          "label_smoothing": 0.1756,
+          "grad_clip": 4.735,
+          "use_amp": true,
+          "feature_noise_std": 0.0972,
+          "mixup_alpha": 0.0277
+        }
+      },
+      "seconds": 2.291778564453125
+    },
+    {
+      "trial_id": 7,
+      "primary": 0.20072852760736196,
+      "metrics": {
+        "acc": 0.20072852760736196,
+        "balanced_acc": 0.05586556843785649,
+        "macro_f1": 0.03672552271723086,
+        "logloss": 3.648102589683171,
+        "search_score": 0.1233205426006573,
+        "primary": 0.20072852760736196
+      },
+      "rung": "cheap",
+      "n_params": 6371528,
+      "arch_family": "resmlp",
+      "config": {
+        "preprocess": {
+          "num_encoder": "none",
+          "cat_encoder": "embedding"
+        },
+        "arch": {
+          "family": "resmlp",
+          "n_blocks": 8,
+          "block_width": 626,
+          "dropout": 0.0826,
+          "activation": "leaky_relu",
+          "normalization": "batchnorm",
+          "embedding_dim": 63
+        },
+        "train": {
+          "optimizer": "sgd_momentum",
+          "lr": 0.001844,
+          "weight_decay": 0.000979,
+          "scheduler": "none",
+          "batch_size": 512,
+          "epochs": 122,
+          "patience": 19,
+          "label_smoothing": 0.0903,
+          "grad_clip": 1.24,
+          "use_amp": true,
+          "feature_noise_std": 0.0042,
+          "mixup_alpha": 0.2216
+        }
+      },
+      "seconds": 1.8042559623718262
+    },
+    {
+      "trial_id": 8,
+      "primary": 0.13113496932515337,
+      "metrics": {
+        "acc": 0.13113496932515337,
+        "balanced_acc": 0.0331949605323467,
+        "macro_f1": 0.017837733363569645,
+        "logloss": 3.9998053807335863,
+        "search_score": 0.05567902593678972,
+        "primary": 0.13113496932515337
+      },
+      "rung": "cheap",
+      "n_params": 108910,
+      "arch_family": "mlp",
+      "config": {
+        "preprocess": {
+          "num_encoder": "none",
+          "cat_encoder": "embedding"
+        },
+        "arch": {
+          "family": "mlp",
+          "hidden_dims": [
+            837
+          ],
+          "activation": "gelu",
+          "dropout": 0.0404,
+          "normalization": "batchnorm",
+          "embedding_dim": 59
+        },
+        "train": {
+          "optimizer": "adam",
+          "lr": 1.6e-05,
+          "weight_decay": 0.0,
+          "scheduler": "none",
+          "batch_size": 256,
+          "epochs": 148,
+          "patience": 7,
+          "label_smoothing": 0.1447,
+          "grad_clip": 4.412,
+          "use_amp": false,
+          "feature_noise_std": 0.0486,
+          "mixup_alpha": 0.1892
+        }
+      },
+      "seconds": 1.0831546783447266
+    },
+    {
+      "trial_id": 9,
+      "primary": 0.33943634969325154,
+      "metrics": {
+        "acc": 0.33943634969325154,
+        "balanced_acc": 0.14729629793727328,
+        "macro_f1": 0.13828310398024318,
+        "logloss": 2.8073784150080807,
+        "search_score": 0.26805400600688206,
+        "primary": 0.33943634969325154
+      },
+      "rung": "full",
+      "n_params": 82276,
+      "arch_family": "mlp",
+      "config": {
+        "preprocess": {
+          "num_encoder": "quantile",
+          "cat_encoder": "embedding"
+        },
+        "arch": {
+          "family": "mlp",
+          "hidden_dims": [
+            642
+          ],
+          "activation": "leaky_relu",
+          "dropout": 0.2467,
+          "normalization": "none",
+          "embedding_dim": 7
+        },
+        "train": {
+          "optimizer": "sgd_momentum",
+          "lr": 0.000913,
+          "weight_decay": 0.0,
+          "scheduler": "plateau",
+          "batch_size": 128,
+          "epochs": 73,
+          "patience": 9,
+          "label_smoothing": 0.038,
+          "grad_clip": 2.243,
+          "use_amp": true,
+          "feature_noise_std": 0.0557,
+          "mixup_alpha": 0.0999
+        }
+      },
+      "seconds": 56.185285329818726
+    },
+    {
+      "trial_id": 10,
+      "primary": 0.16804064417177914,
+      "metrics": {
+        "acc": 0.16804064417177914,
+        "balanced_acc": 0.05714783105114497,
+        "macro_f1": 0.04259683507566777,
+        "logloss": 4.01949536896875,
+        "search_score": 0.09038674187037891,
+        "primary": 0.16804064417177914
+      },
+      "rung": "cheap",
+      "n_params": 55300,
+      "arch_family": "gated_tab",
+      "config": {
+        "preprocess": {
+          "num_encoder": "standard",
+          "cat_encoder": "onehot"
+        },
+        "arch": {
+          "family": "gated_tab",
+          "n_blocks": 1,
+          "block_width": 115,
+          "dropout": 0.3261,
+          "activation": "relu",
+          "normalization": "batchnorm",
+          "embedding_dim": 63
+        },
+        "train": {
+          "optimizer": "adamw",
+          "lr": 3.2e-05,
+          "weight_decay": 0.0,
+          "scheduler": "none",
+          "batch_size": 128,
+          "epochs": 52,
+          "patience": 15,
+          "label_smoothing": 0.0004,
+          "grad_clip": 1.952,
+          "use_amp": false,
+          "feature_noise_std": 0.157,
+          "mixup_alpha": 0.1141
+        }
+      },
+      "seconds": 2.1275436878204346
+    },
+    {
+      "trial_id": 11,
+      "primary": 0.013899539877300613,
+      "metrics": {
+        "acc": 0.013899539877300613,
+        "balanced_acc": 0.010876955798681451,
+        "macro_f1": 0.0015157656951500242,
+        "logloss": 14.587831185671469,
+        "search_score": -0.20583937502474087,
+        "primary": 0.013899539877300613
+      },
+      "rung": "cheap",
+      "n_params": 1127524,
+      "arch_family": "resmlp",
+      "config": {
+        "preprocess": {
+          "num_encoder": "none",
+          "cat_encoder": "onehot"
+        },
+        "arch": {
+          "family": "resmlp",
+          "n_blocks": 4,
+          "block_width": 367,
+          "dropout": 0.1089,
+          "activation": "relu",
+          "normalization": "none",
+          "embedding_dim": 51
+        },
+        "train": {
+          "optimizer": "sgd_momentum",
+          "lr": 1.5e-05,
+          "weight_decay": 0.0,
+          "scheduler": "none",
+          "batch_size": 256,
+          "epochs": 24,
+          "patience": 19,
+          "label_smoothing": 0.016,
+          "grad_clip": 0.929,
+          "use_amp": false,
+          "feature_noise_std": 0.135,
+          "mixup_alpha": 0.0941
+        }
+      },
+      "seconds": 1.7361972332000732
+    },
+    {
+      "trial_id": 12,
+      "primary": 0.11550996932515338,
+      "metrics": {
+        "acc": 0.11550996932515338,
+        "balanced_acc": 0.031856852855789736,
+        "macro_f1": 0.021140888638411678,
+        "logloss": 4.308587863748016,
+        "search_score": 0.03779738568765968,
+        "primary": 0.11550996932515338
+      },
+      "rung": "cheap",
+      "n_params": 177212,
+      "arch_family": "gated_tab",
+      "config": {
+        "preprocess": {
+          "num_encoder": "standard",
+          "cat_encoder": "embedding"
+        },
+        "arch": {
+          "family": "gated_tab",
+          "n_blocks": 5,
+          "block_width": 104,
+          "dropout": 0.3097,
+          "activation": "leaky_relu",
+          "normalization": "none",
+          "embedding_dim": 41
+        },
+        "train": {
+          "optimizer": "sgd_momentum",
+          "lr": 0.00037,
+          "weight_decay": 0.0,
+          "scheduler": "plateau",
+          "batch_size": 256,
+          "epochs": 77,
+          "patience": 15,
+          "label_smoothing": 0.0262,
+          "grad_clip": 3.228,
+          "use_amp": true,
+          "feature_noise_std": 0.1858,
+          "mixup_alpha": 0.3743
+        }
+      },
+      "seconds": 2.33410382270813
+    },
+    {
+      "trial_id": 13,
+      "primary": 0.36225076687116564,
+      "metrics": {
+        "acc": 0.36225076687116564,
+        "balanced_acc": 0.20350614622916777,
+        "macro_f1": 0.20433235520761311,
+        "logloss": 2.6935801580919136,
+        "search_score": 0.29807668185240954,
+        "primary": 0.36225076687116564
+      },
+      "rung": "full",
+      "n_params": 437178,
+      "arch_family": "gated_tab",
+      "config": {
+        "preprocess": {
+          "num_encoder": "standard",
+          "cat_encoder": "onehot"
+        },
+        "arch": {
+          "family": "gated_tab",
+          "n_blocks": 5,
+          "block_width": 166,
+          "dropout": 0.0366,
+          "activation": "gelu",
+          "normalization": "none",
+          "embedding_dim": 20
+        },
+        "train": {
+          "optimizer": "adamw",
+          "lr": 0.006306,
+          "weight_decay": 0.014285,
+          "scheduler": "plateau",
+          "batch_size": 512,
+          "epochs": 50,
+          "patience": 17,
+          "label_smoothing": 0.1667,
+          "grad_clip": 3.518,
+          "use_amp": false,
+          "feature_noise_std": 0.1974,
+          "mixup_alpha": 0.2616
+        }
+      },
+      "seconds": 30.771401166915894
+    },
+    {
+      "trial_id": 14,
+      "primary": 0.37423312883435583,
+      "metrics": {
+        "acc": 0.37423312883435583,
+        "balanced_acc": 0.21011813361016454,
+        "macro_f1": 0.2059251383411135,
+        "logloss": 2.6063933319609256,
+        "search_score": 0.3103103298078607,
+        "primary": 0.37423312883435583
+      },
+      "rung": "full",
+      "n_params": 336428,
+      "arch_family": "autoint",
+      "config": {
+        "preprocess": {
+          "num_encoder": "standard",
+          "cat_encoder": "onehot"
+        },
+        "arch": {
+          "family": "autoint",
+          "n_blocks": 2,
+          "d_token": 128,
+          "n_heads": 2,
+          "attn_dropout": 0.0793,
+          "ffn_factor": 2.779,
+          "ffn_dropout": 0.3,
+          "activation": "relu"
+        },
+        "train": {
+          "optimizer": "adam",
+          "lr": 7e-05,
+          "weight_decay": 0.0,
+          "scheduler": "plateau",
+          "batch_size": 256,
+          "epochs": 185,
+          "patience": 23,
+          "label_smoothing": 0.1706,
+          "grad_clip": 2.527,
+          "use_amp": true,
+          "feature_noise_std": 0.1816,
+          "mixup_alpha": 0.0203
+        }
+      },
+      "seconds": 143.33858489990234
+    },
+    {
+      "trial_id": 15,
+      "primary": 0.13813266871165644,
+      "metrics": {
+        "acc": 0.13813266871165644,
+        "balanced_acc": 0.029054135070281463,
+        "macro_f1": 0.012188395485554114,
+        "logloss": 3.795117406469645,
+        "search_score": 0.06400084058916916,
+        "primary": 0.13813266871165644
+      },
+      "rung": "cheap",
+      "n_params": 142642,
+      "arch_family": "tabm",
+      "config": {
+        "preprocess": {
+          "num_encoder": "none",
+          "cat_encoder": "onehot"
+        },
+        "arch": {
+          "family": "tabm",
+          "n_blocks": 2,
+          "width": 131,
+          "k": 9,
+          "dropout": 0.347,
+          "head_dropout": 0.1911,
+          "activation": "silu",
+          "normalization": "layernorm",
+          "embedding_dim": 51
+        },
+        "train": {
+          "optimizer": "adam",
+          "lr": 0.000452,
+          "weight_decay": 0.0,
+          "scheduler": "cosine",
+          "batch_size": 256,
+          "epochs": 149,
+          "patience": 4,
+          "label_smoothing": 0.1669,
+          "grad_clip": 2.913,
+          "use_amp": true,
+          "feature_noise_std": 0.0255,
+          "mixup_alpha": 0.1233
+        }
+      },
+      "seconds": 2.635537624359131
+    },
+    {
+      "trial_id": 16,
+      "primary": 0.3318634969325153,
+      "metrics": {
+        "acc": 0.3318634969325153,
+        "balanced_acc": 0.1576974885955838,
+        "macro_f1": 0.14119321814910382,
+        "logloss": 2.8038368043946478,
+        "search_score": 0.26285583009373187,
+        "primary": 0.3318634969325153
+      },
+      "rung": "full",
+      "n_params": 4553684,
+      "arch_family": "resmlp",
+      "config": {
+        "preprocess": {
+          "num_encoder": "standard",
+          "cat_encoder": "onehot"
+        },
+        "arch": {
+          "family": "resmlp",
+          "n_blocks": 4,
+          "block_width": 746,
+          "dropout": 0.0514,
+          "activation": "leaky_relu",
+          "normalization": "none",
+          "embedding_dim": 51
+        },
+        "train": {
+          "optimizer": "adamw",
+          "lr": 0.005988,
+          "weight_decay": 0.0,
+          "scheduler": "onecycle",
+          "batch_size": 256,
+          "epochs": 115,
+          "patience": 3,
+          "label_smoothing": 0.0359,
+          "grad_clip": 4.622,
+          "use_amp": false,
+          "feature_noise_std": 0.0823,
+          "mixup_alpha": 0.268
+        }
+      },
+      "seconds": 5.921342611312866
+    },
+    {
+      "trial_id": 17,
+      "primary": 0.20993098159509202,
+      "metrics": {
+        "acc": 0.20993098159509202,
+        "balanced_acc": 0.05460547393225177,
+        "macro_f1": 0.03579148806622926,
+        "logloss": 3.492074250083053,
+        "search_score": 0.13331034240111908,
+        "primary": 0.20993098159509202
+      },
+      "rung": "cheap",
+      "n_params": 3208856,
+      "arch_family": "tabm",
+      "config": {
+        "preprocess": {
+          "num_encoder": "none",
+          "cat_encoder": "embedding"
+        },
+        "arch": {
+          "family": "tabm",
+          "n_blocks": 3,
+          "width": 934,
+          "k": 15,
+          "dropout": 0.0486,
+          "head_dropout": 0.2617,
+          "activation": "silu",
+          "normalization": "layernorm",
+          "embedding_dim": 16
+        },
+        "train": {
+          "optimizer": "adam",
+          "lr": 0.000112,
+          "weight_decay": 0.012568,
+          "scheduler": "onecycle",
+          "batch_size": 128,
+          "epochs": 178,
+          "patience": 9,
+          "label_smoothing": 0.0797,
+          "grad_clip": 1.393,
+          "use_amp": true,
+          "feature_noise_std": 0.1547,
+          "mixup_alpha": 0.1405
+        }
+      },
+      "seconds": 3.8903045654296875
+    },
+    {
+      "trial_id": 18,
+      "primary": 0.027799079754601226,
+      "metrics": {
+        "acc": 0.027799079754601226,
+        "balanced_acc": 0.014269976033356314,
+        "macro_f1": 0.0015158915068186713,
+        "logloss": 4.67124720944822,
+        "search_score": -0.04493669817163569,
+        "primary": 0.027799079754601226
+      },
+      "rung": "cheap",
+      "n_params": 4556,
+      "arch_family": "autoint",
+      "config": {
+        "preprocess": {
+          "num_encoder": "none",
+          "cat_encoder": "onehot"
+        },
+        "arch": {
+          "family": "autoint",
+          "n_blocks": 1,
+          "d_token": 16,
+          "n_heads": 4,
+          "attn_dropout": 0.2631,
+          "ffn_factor": 1.522,
+          "ffn_dropout": 0.3,
+          "activation": "gelu"
+        },
+        "train": {
+          "optimizer": "adamw",
+          "lr": 2.1e-05,
+          "weight_decay": 0.001258,
+          "scheduler": "plateau",
+          "batch_size": 1024,
+          "epochs": 165,
+          "patience": 19,
+          "label_smoothing": 0.0231,
+          "grad_clip": 4.498,
+          "use_amp": true,
+          "feature_noise_std": 0.0089,
+          "mixup_alpha": 0.1744
+        }
+      },
+      "seconds": 1.0060131549835205
+    },
+    {
+      "trial_id": 19,
+      "primary": 0.13103911042944785,
+      "metrics": {
+        "acc": 0.13103911042944785,
+        "balanced_acc": 0.02630407323220207,
+        "macro_f1": 0.009619301727599837,
+        "logloss": 3.7845968473892966,
+        "search_score": 0.05772566356379142,
+        "primary": 0.13103911042944785
+      },
+      "rung": "cheap",
+      "n_params": 452334,
+      "arch_family": "tabm",
+      "config": {
+        "preprocess": {
+          "num_encoder": "none",
+          "cat_encoder": "embedding"
+        },
+        "arch": {
+          "family": "tabm",
+          "n_blocks": 5,
+          "width": 199,
+          "k": 14,
+          "dropout": 0.4143,
+          "head_dropout": 0.1869,
+          "activation": "relu",
+          "normalization": "layernorm",
+          "embedding_dim": 50
+        },
+        "train": {
+          "optimizer": "adam",
+          "lr": 0.000332,
+          "weight_decay": 2e-06,
+          "scheduler": "plateau",
+          "batch_size": 256,
+          "epochs": 59,
+          "patience": 16,
+          "label_smoothing": 0.133,
+          "grad_clip": 1.896,
+          "use_amp": false,
+          "feature_noise_std": 0.0348,
+          "mixup_alpha": 0.2276
+        }
+      },
+      "seconds": 2.101531982421875
+    },
+    {
+      "trial_id": 20,
+      "primary": 0.29495782208588955,
+      "metrics": {
+        "acc": 0.29495782208588955,
+        "balanced_acc": 0.08884952350279422,
+        "macro_f1": 0.06413042157316745,
+        "logloss": 3.098459285860915,
+        "search_score": 0.2163287329140302,
+        "primary": 0.29495782208588955
+      },
+      "rung": "full",
+      "n_params": 717184,
+      "arch_family": "tabm",
+      "config": {
+        "preprocess": {
+          "num_encoder": "quantile",
+          "cat_encoder": "embedding"
+        },
+        "arch": {
+          "family": "tabm",
+          "n_blocks": 4,
+          "width": 343,
+          "k": 10,
+          "dropout": 0.3536,
+          "head_dropout": 0.182,
+          "activation": "silu",
+          "normalization": "batchnorm",
+          "embedding_dim": 32
+        },
+        "train": {
+          "optimizer": "adam",
+          "lr": 0.001064,
+          "weight_decay": 0.003599,
+          "scheduler": "onecycle",
+          "batch_size": 128,
+          "epochs": 82,
+          "patience": 19,
+          "label_smoothing": 0.1328,
+          "grad_clip": 3.096,
+          "use_amp": true,
+          "feature_noise_std": 0.1904,
+          "mixup_alpha": 0.0939
+        }
+      },
+      "seconds": 61.88487124443054
+    },
+    {
+      "trial_id": 21,
+      "primary": 0.189704754601227,
+      "metrics": {
+        "acc": 0.189704754601227,
+        "balanced_acc": 0.04738230488148255,
+        "macro_f1": 0.027732025705426627,
+        "logloss": 3.6233154285638594,
+        "search_score": 0.11302414175600461,
+        "primary": 0.189704754601227
+      },
+      "rung": "cheap",
+      "n_params": 59552,
+      "arch_family": "resmlp",
+      "config": {
+        "preprocess": {
+          "num_encoder": "quantile",
+          "cat_encoder": "embedding"
+        },
+        "arch": {
+          "family": "resmlp",
+          "n_blocks": 3,
+          "block_width": 89,
+          "dropout": 0.0231,
+          "activation": "leaky_relu",
+          "normalization": "none",
+          "embedding_dim": 58
+        },
+        "train": {
+          "optimizer": "adamw",
+          "lr": 0.000232,
+          "weight_decay": 0.000107,
+          "scheduler": "none",
+          "batch_size": 1024,
+          "epochs": 112,
+          "patience": 10,
+          "label_smoothing": 0.0295,
+          "grad_clip": 3.438,
+          "use_amp": false,
+          "feature_noise_std": 0.1721,
+          "mixup_alpha": 0.3542
+        }
+      },
+      "seconds": 1.1641621589660645
+    },
+    {
+      "trial_id": 22,
+      "primary": 0.3883243865030675,
+      "metrics": {
+        "acc": 0.3883243865030675,
+        "balanced_acc": 0.23793093787621875,
+        "macro_f1": 0.23574160161095967,
+        "logloss": 2.5403215548233815,
+        "search_score": 0.3275510790734265,
+        "primary": 0.3883243865030675
+      },
+      "rung": "full",
+      "n_params": 230330,
+      "arch_family": "resmlp",
+      "config": {
+        "preprocess": {
+          "num_encoder": "quantile",
+          "cat_encoder": "embedding"
+        },
+        "arch": {
+          "family": "resmlp",
+          "n_blocks": 8,
+          "block_width": 115,
+          "dropout": 0.2787,
+          "activation": "relu",
+          "normalization": "layernorm",
+          "embedding_dim": 12
+        },
+        "train": {
+          "optimizer": "adam",
+          "lr": 0.001006,
+          "weight_decay": 0.000147,
+          "scheduler": "none",
+          "batch_size": 1024,
+          "epochs": 150,
+          "patience": 17,
+          "label_smoothing": 0.1794,
+          "grad_clip": 3.718,
+          "use_amp": true,
+          "feature_noise_std": 0.0518,
+          "mixup_alpha": 0.0989
+        }
+      },
+      "seconds": 36.20240569114685
+    },
+    {
+      "trial_id": 23,
+      "primary": 0.1691909509202454,
+      "metrics": {
+        "acc": 0.1691909509202454,
+        "balanced_acc": 0.044686800328720695,
+        "macro_f1": 0.027072291399839788,
+        "logloss": 3.85704234135118,
+        "search_score": 0.09177896776480493,
+        "primary": 0.1691909509202454
+      },
+      "rung": "cheap",
+      "n_params": 6070150,
+      "arch_family": "gated_tab",
+      "config": {
+        "preprocess": {
+          "num_encoder": "none",
+          "cat_encoder": "onehot"
+        },
+        "arch": {
+          "family": "gated_tab",
+          "n_blocks": 4,
+          "block_width": 705,
+          "dropout": 0.1196,
+          "activation": "leaky_relu",
+          "normalization": "batchnorm",
+          "embedding_dim": 49
+        },
+        "train": {
+          "optimizer": "adam",
+          "lr": 5.1e-05,
+          "weight_decay": 0.017831,
+          "scheduler": "cosine",
+          "batch_size": 256,
+          "epochs": 48,
+          "patience": 10,
+          "label_smoothing": 0.0766,
+          "grad_clip": 0.764,
+          "use_amp": true,
+          "feature_noise_std": 0.083,
+          "mixup_alpha": 0.1324
+        }
+      },
+      "seconds": 2.692915916442871
+    },
+    {
+      "trial_id": 24,
+      "primary": 0.12701303680981596,
+      "metrics": {
+        "acc": 0.12701303680981596,
+        "balanced_acc": 0.025760667173176603,
+        "macro_f1": 0.011480720403675078,
+        "logloss": 4.1418999048468885,
+        "search_score": 0.048982685453141654,
+        "primary": 0.12701303680981596
+      },
+      "rung": "cheap",
+      "n_params": 943020,
+      "arch_family": "mlp",
+      "config": {
+        "preprocess": {
+          "num_encoder": "quantile",
+          "cat_encoder": "onehot"
+        },
+        "arch": {
+          "family": "mlp",
+          "hidden_dims": [
+            798,
+            1024
+          ],
+          "activation": "relu",
+          "dropout": 0.514,
+          "normalization": "none",
+          "embedding_dim": 28
+        },
+        "train": {
+          "optimizer": "adam",
+          "lr": 1e-05,
+          "weight_decay": 0.001881,
+          "scheduler": "none",
+          "batch_size": 256,
+          "epochs": 134,
+          "patience": 10,
+          "label_smoothing": 0.0546,
+          "grad_clip": 2.428,
+          "use_amp": true,
+          "feature_noise_std": 0.1338,
+          "mixup_alpha": 0.3193
+        }
+      },
+      "seconds": 1.3950612545013428
+    },
+    {
+      "trial_id": 25,
+      "primary": 0.18903374233128833,
+      "metrics": {
+        "acc": 0.18903374233128833,
+        "balanced_acc": 0.046250341507418594,
+        "macro_f1": 0.028028102828088926,
+        "logloss": 3.716207915652139,
+        "search_score": 0.1109620015389593,
+        "primary": 0.18903374233128833
+      },
+      "rung": "cheap",
+      "n_params": 1151005,
+      "arch_family": "ft_transformer",
+      "config": {
+        "preprocess": {
+          "num_encoder": "none",
+          "cat_encoder": "embedding"
+        },
+        "arch": {
+          "family": "ft_transformer",
+          "n_blocks": 5,
+          "d_token": 190,
+          "n_heads": 2,
+          "ffn_factor": 1.081,
+          "attn_dropout": 0.1576,
+          "ffn_dropout": 0.2258,
+          "residual_dropout": 0.0054,
+          "activation": "relu"
+        },
+        "train": {
+          "optimizer": "adam",
+          "lr": 2.6e-05,
+          "weight_decay": 0.0,
+          "scheduler": "none",
+          "batch_size": 512,
+          "epochs": 64,
+          "patience": 17,
+          "label_smoothing": 0.0654,
+          "grad_clip": 3.806,
+          "use_amp": true,
+          "feature_noise_std": 0.1504,
+          "mixup_alpha": 0.3328
+        }
+      },
+      "seconds": 2.952627420425415
+    },
+    {
+      "trial_id": 26,
+      "primary": 0.3597584355828221,
+      "metrics": {
+        "acc": 0.3597584355828221,
+        "balanced_acc": 0.19885514362826587,
+        "macro_f1": 0.19919846601037372,
+        "logloss": 2.650323287326384,
+        "search_score": 0.29588525859884834,
+        "primary": 0.3597584355828221
+      },
+      "rung": "full",
+      "n_params": 1602449,
+      "arch_family": "ft_transformer",
+      "config": {
+        "preprocess": {
+          "num_encoder": "quantile",
+          "cat_encoder": "embedding"
+        },
+        "arch": {
+          "family": "ft_transformer",
+          "n_blocks": 5,
+          "d_token": 222,
+          "n_heads": 2,
+          "ffn_factor": 1.156,
+          "attn_dropout": 0.3808,
+          "ffn_dropout": 0.0897,
+          "residual_dropout": 0.0137,
+          "activation": "relu"
+        },
+        "train": {
+          "optimizer": "adamw",
+          "lr": 0.001831,
+          "weight_decay": 0.0,
+          "scheduler": "cosine",
+          "batch_size": 256,
+          "epochs": 71,
+          "patience": 7,
+          "label_smoothing": 0.0947,
+          "grad_clip": 0.572,
+          "use_amp": false,
+          "feature_noise_std": 0.093,
+          "mixup_alpha": 0.1025
+        }
+      },
+      "seconds": 312.5313940048218
+    },
+    {
+      "trial_id": 27,
+      "primary": 0.019842791411042945,
+      "metrics": {
+        "acc": 0.019842791411042945,
+        "balanced_acc": 0.009017207095732897,
+        "macro_f1": 0.0074438400645994805,
+        "logloss": 4.644692672706567,
+        "search_score": -0.05153010467840874,
+        "primary": 0.019842791411042945
+      },
+      "rung": "cheap",
+      "n_params": 10437210,
+      "arch_family": "gated_tab",
+      "config": {
+        "preprocess": {
+          "num_encoder": "quantile",
+          "cat_encoder": "embedding"
+        },
+        "arch": {
+          "family": "gated_tab",
+          "n_blocks": 5,
+          "block_width": 829,
+          "dropout": 0.3592,
+          "activation": "gelu",
+          "normalization": "layernorm",
+          "embedding_dim": 10
+        },
+        "train": {
+          "optimizer": "sgd_momentum",
+          "lr": 1.2e-05,
+          "weight_decay": 0.000551,
+          "scheduler": "none",
+          "batch_size": 1024,
+          "epochs": 193,
+          "patience": 9,
+          "label_smoothing": 0.0152,
+          "grad_clip": 3.453,
+          "use_amp": false,
+          "feature_noise_std": 0.0204,
+          "mixup_alpha": 0.309
+        }
+      },
+      "seconds": 2.432823657989502
+    },
+    {
+      "trial_id": 28,
+      "primary": 0.0285659509202454,
+      "metrics": {
+        "acc": 0.0285659509202454,
+        "balanced_acc": 0.01396921606617055,
+        "macro_f1": 0.005033110349199545,
+        "logloss": 4.55473708239305,
+        "search_score": -0.04239142082961013,
+        "primary": 0.0285659509202454
+      },
+      "rung": "cheap",
+      "n_params": 583348,
+      "arch_family": "gated_tab",
+      "config": {
+        "preprocess": {
+          "num_encoder": "none",
+          "cat_encoder": "embedding"
+        },
+        "arch": {
+          "family": "gated_tab",
+          "n_blocks": 1,
+          "block_width": 419,
+          "dropout": 0.2664,
+          "activation": "silu",
+          "normalization": "batchnorm",
+          "embedding_dim": 36
+        },
+        "train": {
+          "optimizer": "sgd_momentum",
+          "lr": 0.000106,
+          "weight_decay": 0.005706,
+          "scheduler": "cosine",
+          "batch_size": 1024,
+          "epochs": 102,
+          "patience": 23,
+          "label_smoothing": 0.1783,
+          "grad_clip": 2.299,
+          "use_amp": true,
+          "feature_noise_std": 0.0352,
+          "mixup_alpha": 0.2087
+        }
+      },
+      "seconds": 1.508415699005127
+    },
+    {
+      "trial_id": 29,
+      "primary": 0.3218941717791411,
+      "metrics": {
+        "acc": 0.3218941717791411,
+        "balanced_acc": 0.15002634628983644,
+        "macro_f1": 0.14161452509588798,
+        "logloss": 2.944596712534872,
+        "search_score": 0.2515244562080249,
+        "primary": 0.3218941717791411
+      },
+      "rung": "full",
+      "n_params": 11139386,
+      "arch_family": "gated_tab",
+      "config": {
+        "preprocess": {
+          "num_encoder": "none",
+          "cat_encoder": "onehot"
+        },
+        "arch": {
+          "family": "gated_tab",
+          "n_blocks": 5,
+          "block_width": 857,
+          "dropout": 0.2417,
+          "activation": "leaky_relu",
+          "normalization": "none",
+          "embedding_dim": 41
+        },
+        "train": {
+          "optimizer": "adam",
+          "lr": 9.3e-05,
+          "weight_decay": 0.0,
+          "scheduler": "cosine",
+          "batch_size": 512,
+          "epochs": 125,
+          "patience": 10,
+          "label_smoothing": 0.1501,
+          "grad_clip": 2.849,
+          "use_amp": false,
+          "feature_noise_std": 0.0673,
+          "mixup_alpha": 0.1977
+        }
+      },
+      "seconds": 140.63905024528503
+    },
+    {
+      "trial_id": 30,
+      "primary": 0.3760544478527607,
+      "metrics": {
+        "acc": 0.3760544478527607,
+        "balanced_acc": 0.2236313347219642,
+        "macro_f1": 0.21930842238822162,
+        "logloss": 2.626617708256036,
+        "search_score": 0.31357556964261357,
+        "primary": 0.3760544478527607
+      },
+      "rung": "full",
+      "n_params": 382701,
+      "arch_family": "ft_transformer",
+      "config": {
+        "preprocess": {
+          "num_encoder": "quantile",
+          "cat_encoder": "embedding"
+        },
+        "arch": {
+          "family": "ft_transformer",
+          "n_blocks": 3,
+          "d_token": 122,
+          "n_heads": 2,
+          "ffn_factor": 2.021,
+          "attn_dropout": 0.3521,
+          "ffn_dropout": 0.2805,
+          "residual_dropout": 0.0553,
+          "activation": "gelu"
+        },
+        "train": {
+          "optimizer": "sgd_momentum",
+          "lr": 0.006985,
+          "weight_decay": 0.0,
+          "scheduler": "none",
+          "batch_size": 1024,
+          "epochs": 152,
+          "patience": 27,
+          "label_smoothing": 0.0481,
+          "grad_clip": 2.38,
+          "use_amp": false,
+          "feature_noise_std": 0.0896,
+          "mixup_alpha": 0.0069
+        }
+      },
+      "seconds": 119.3277473449707
+    },
+    {
+      "trial_id": 31,
+      "primary": 0.03680981595092025,
+      "metrics": {
+        "acc": 0.03680981595092025,
+        "balanced_acc": 0.012231950265905442,
+        "macro_f1": 0.005094027870864018,
+        "logloss": 4.515030457900438,
+        "search_score": -0.03495921689009061,
+        "primary": 0.03680981595092025
+      },
+      "rung": "cheap",
+      "n_params": 248873,
+      "arch_family": "ft_transformer",
+      "config": {
+        "preprocess": {
+          "num_encoder": "quantile",
+          "cat_encoder": "embedding"
+        },
+        "arch": {
+          "family": "ft_transformer",
+          "n_blocks": 3,
+          "d_token": 88,
+          "n_heads": 8,
+          "ffn_factor": 2.992,
+          "attn_dropout": 0.1476,
+          "ffn_dropout": 0.2214,
+          "residual_dropout": 0.0688,
+          "activation": "relu"
+        },
+        "train": {
+          "optimizer": "sgd_momentum",
+          "lr": 9.8e-05,
+          "weight_decay": 1e-06,
+          "scheduler": "plateau",
+          "batch_size": 256,
+          "epochs": 40,
+          "patience": 26,
+          "label_smoothing": 0.0385,
+          "grad_clip": 0.598,
+          "use_amp": false,
+          "feature_noise_std": 0.1524,
+          "mixup_alpha": 0.0741
+        }
+      },
+      "seconds": 3.6225414276123047
+    },
+    {
+      "trial_id": 32,
+      "primary": 0.19133435582822086,
+      "metrics": {
+        "acc": 0.19133435582822086,
+        "balanced_acc": 0.04765871520537125,
+        "macro_f1": 0.03110225419190116,
+        "logloss": 4.234644768630235,
+        "search_score": 0.10543551515466641,
+        "primary": 0.19133435582822086
+      },
+      "rung": "cheap",
+      "n_params": 5255094,
+      "arch_family": "tabm",
+      "config": {
+        "preprocess": {
+          "num_encoder": "standard",
+          "cat_encoder": "onehot"
+        },
+        "arch": {
+          "family": "tabm",
+          "n_blocks": 6,
+          "width": 906,
+          "k": 12,
+          "dropout": 0.2686,
+          "head_dropout": 0.2942,
+          "activation": "gelu",
+          "normalization": "batchnorm",
+          "embedding_dim": 18
+        },
+        "train": {
+          "optimizer": "adam",
+          "lr": 3.5e-05,
+          "weight_decay": 0.0,
+          "scheduler": "onecycle",
+          "batch_size": 512,
+          "epochs": 21,
+          "patience": 4,
+          "label_smoothing": 0.1107,
+          "grad_clip": 3.487,
+          "use_amp": true,
+          "feature_noise_std": 0.1737,
+          "mixup_alpha": 0.1964
+        }
+      },
+      "seconds": 2.0090696811676025
+    },
+    {
+      "trial_id": 33,
+      "primary": 0.3629217791411043,
+      "metrics": {
+        "acc": 0.3629217791411043,
+        "balanced_acc": 0.18622313347383493,
+        "macro_f1": 0.17445008278036986,
+        "logloss": 2.635594295359152,
+        "search_score": 0.29629441532595335,
+        "primary": 0.3629217791411043
+      },
+      "rung": "full",
+      "n_params": 469636,
+      "arch_family": "ft_transformer",
+      "config": {
+        "preprocess": {
+          "num_encoder": "standard",
+          "cat_encoder": "onehot"
+        },
+        "arch": {
+          "family": "ft_transformer",
+          "n_blocks": 3,
+          "d_token": 144,
+          "n_heads": 4,
+          "ffn_factor": 1.553,
+          "attn_dropout": 0.0206,
+          "ffn_dropout": 0.3764,
+          "residual_dropout": 0.0955,
+          "activation": "gelu"
+        },
+        "train": {
+          "optimizer": "adam",
+          "lr": 0.000299,
+          "weight_decay": 0.000638,
+          "scheduler": "onecycle",
+          "batch_size": 256,
+          "epochs": 154,
+          "patience": 12,
+          "label_smoothing": 0.017,
+          "grad_clip": 1.241,
+          "use_amp": false,
+          "feature_noise_std": 0.0832,
+          "mixup_alpha": 0.2385
+        }
+      },
+      "seconds": 158.54693412780762
+    },
+    {
+      "trial_id": 34,
+      "primary": 0.34892638036809814,
+      "metrics": {
+        "acc": 0.34892638036809814,
+        "balanced_acc": 0.19243552098009245,
+        "macro_f1": 0.19108846530870732,
+        "logloss": 2.7788370125652118,
+        "search_score": 0.28370284348784985,
+        "primary": 0.34892638036809814
+      },
+      "rung": "full",
+      "n_params": 3381100,
+      "arch_family": "gated_tab",
+      "config": {
+        "preprocess": {
+          "num_encoder": "none",
+          "cat_encoder": "embedding"
+        },
+        "arch": {
+          "family": "gated_tab",
+          "n_blocks": 4,
+          "block_width": 525,
+          "dropout": 0.4543,
+          "activation": "silu",
+          "normalization": "none",
+          "embedding_dim": 31
+        },
+        "train": {
+          "optimizer": "adam",
+          "lr": 0.000508,
+          "weight_decay": 0.0,
+          "scheduler": "cosine",
+          "batch_size": 256,
+          "epochs": 170,
+          "patience": 9,
+          "label_smoothing": 0.0529,
+          "grad_clip": 0.406,
+          "use_amp": true,
+          "feature_noise_std": 0.1104,
+          "mixup_alpha": 0.0626
+        }
+      },
+      "seconds": 196.4091329574585
+    },
+    {
+      "trial_id": 35,
+      "primary": 0.36627684049079756,
+      "metrics": {
+        "acc": 0.36627684049079756,
+        "balanced_acc": 0.19313126313960682,
+        "macro_f1": 0.18293053467317552,
+        "logloss": 2.6407235042326023,
+        "search_score": 0.30018411490130836,
+        "primary": 0.36627684049079756
+      },
+      "rung": "full",
+      "n_params": 32726,
+      "arch_family": "autoint",
+      "config": {
+        "preprocess": {
+          "num_encoder": "quantile",
+          "cat_encoder": "onehot"
+        },
+        "arch": {
+          "family": "autoint",
+          "n_blocks": 1,
+          "d_token": 52,
+          "n_heads": 4,
+          "attn_dropout": 0.0694,
+          "ffn_factor": 2.414,
+          "ffn_dropout": 0.3,
+          "activation": "gelu"
+        },
+        "train": {
+          "optimizer": "adamw",
+          "lr": 0.001154,
+          "weight_decay": 0.003272,
+          "scheduler": "onecycle",
+          "batch_size": 1024,
+          "epochs": 39,
+          "patience": 20,
+          "label_smoothing": 0.045,
+          "grad_clip": 0.745,
+          "use_amp": true,
+          "feature_noise_std": 0.0284,
+          "mixup_alpha": 0.0239
+        }
+      },
+      "seconds": 24.377703428268433
+    },
+    {
+      "trial_id": 36,
+      "primary": 0.3758627300613497,
+      "metrics": {
+        "acc": 0.3758627300613497,
+        "balanced_acc": 0.2141736980476845,
+        "macro_f1": 0.21280044677794385,
+        "logloss": 2.5806357882601536,
+        "search_score": 0.31283117587191056,
+        "primary": 0.3758627300613497
+      },
+      "rung": "full",
+      "n_params": 1090072,
+      "arch_family": "ft_transformer",
+      "config": {
+        "preprocess": {
+          "num_encoder": "quantile",
+          "cat_encoder": "onehot"
+        },
+        "arch": {
+          "family": "ft_transformer",
+          "n_blocks": 6,
+          "d_token": 150,
+          "n_heads": 2,
+          "ffn_factor": 1.912,
+          "attn_dropout": 0.161,
+          "ffn_dropout": 0.1089,
+          "residual_dropout": 0.108,
+          "activation": "silu"
+        },
+        "train": {
+          "optimizer": "adamw",
+          "lr": 0.000622,
+          "weight_decay": 0.001386,
+          "scheduler": "plateau",
+          "batch_size": 128,
+          "epochs": 33,
+          "patience": 10,
+          "label_smoothing": 0.1924,
+          "grad_clip": 4.18,
+          "use_amp": false,
+          "feature_noise_std": 0.1902,
+          "mixup_alpha": 0.3998
+        }
+      },
+      "seconds": 210.25969886779785
+    },
+    {
+      "trial_id": 37,
+      "primary": 0.15596242331288343,
+      "metrics": {
+        "acc": 0.15596242331288343,
+        "balanced_acc": 0.057372218614392095,
+        "macro_f1": 0.04601765500678495,
+        "logloss": 7.725770220614262,
+        "search_score": 0.024719611118515464,
+        "primary": 0.15596242331288343
+      },
+      "rung": "cheap",
+      "n_params": 2252870,
+      "arch_family": "gated_tab",
+      "config": {
+        "preprocess": {
+          "num_encoder": "none",
+          "cat_encoder": "onehot"
+        },
+        "arch": {
+          "family": "gated_tab",
+          "n_blocks": 1,
+          "block_width": 845,
+          "dropout": 0.3781,
+          "activation": "leaky_relu",
+          "normalization": "none",
+          "embedding_dim": 45
+        },
+        "train": {
+          "optimizer": "adam",
+          "lr": 0.0056,
+          "weight_decay": 0.0,
+          "scheduler": "none",
+          "batch_size": 1024,
+          "epochs": 33,
+          "patience": 18,
+          "label_smoothing": 0.0696,
+          "grad_clip": 1.667,
+          "use_amp": false,
+          "feature_noise_std": 0.1715,
+          "mixup_alpha": 0.1319
+        }
+      },
+      "seconds": 1.136735439300537
+    },
+    {
+      "trial_id": 38,
+      "primary": 0.31173312883435583,
+      "metrics": {
+        "acc": 0.31173312883435583,
+        "balanced_acc": 0.1329567720884758,
+        "macro_f1": 0.11935214664202347,
+        "logloss": 2.8694309941720895,
+        "search_score": 0.24119497913756985,
+        "primary": 0.31173312883435583
+      },
+      "rung": "full",
+      "n_params": 5304398,
+      "arch_family": "tabm",
+      "config": {
+        "preprocess": {
+          "num_encoder": "none",
+          "cat_encoder": "onehot"
+        },
+        "arch": {
+          "family": "tabm",
+          "n_blocks": 5,
+          "width": 961,
+          "k": 16,
+          "dropout": 0.2475,
+          "head_dropout": 0.1364,
+          "activation": "silu",
+          "normalization": "batchnorm",
+          "embedding_dim": 24
+        },
+        "train": {
+          "optimizer": "adamw",
+          "lr": 0.008139,
+          "weight_decay": 4e-05,
+          "scheduler": "cosine",
+          "batch_size": 1024,
+          "epochs": 115,
+          "patience": 4,
+          "label_smoothing": 0.0375,
+          "grad_clip": 1.809,
+          "use_amp": false,
+          "feature_noise_std": 0.1251,
+          "mixup_alpha": 0.304
+        }
+      },
+      "seconds": 15.401837348937988
+    },
+    {
+      "trial_id": 39,
+      "primary": 0.07553680981595091,
+      "metrics": {
+        "acc": 0.07553680981595091,
+        "balanced_acc": 0.0220569049151172,
+        "macro_f1": 0.015344678917117757,
+        "logloss": 4.447203695237787,
+        "search_score": 0.0004711573523590723,
+        "primary": 0.07553680981595091
+      },
+      "rung": "cheap",
+      "n_params": 6298934,
+      "arch_family": "gated_tab",
+      "config": {
+        "preprocess": {
+          "num_encoder": "standard",
+          "cat_encoder": "onehot"
+        },
+        "arch": {
+          "family": "gated_tab",
+          "n_blocks": 2,
+          "block_width": 1013,
+          "dropout": 0.144,
+          "activation": "leaky_relu",
+          "normalization": "batchnorm",
+          "embedding_dim": 5
+        },
+        "train": {
+          "optimizer": "sgd_momentum",
+          "lr": 0.000671,
+          "weight_decay": 0.0,
+          "scheduler": "onecycle",
+          "batch_size": 512,
+          "epochs": 151,
+          "patience": 3,
+          "label_smoothing": 0.1105,
+          "grad_clip": 0.466,
+          "use_amp": false,
+          "feature_noise_std": 0.1826,
+          "mixup_alpha": 0.1846
+        }
+      },
+      "seconds": 1.8866982460021973
+    }
+  ]
+}

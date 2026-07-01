@@ -1,0 +1,29 @@
+{
+  "preprocess": {
+    "num_encoder": "none",
+    "cat_encoder": "embedding"
+  },
+  "arch": {
+    "family": "gated_tab",
+    "n_blocks": 4,
+    "block_width": 525,
+    "dropout": 0.4543,
+    "activation": "silu",
+    "normalization": "none",
+    "embedding_dim": 31
+  },
+  "train": {
+    "optimizer": "adam",
+    "lr": 0.000508,
+    "weight_decay": 0.0,
+    "scheduler": "cosine",
+    "batch_size": 256,
+    "epochs": 170,
+    "patience": 9,
+    "label_smoothing": 0.0529,
+    "grad_clip": 0.406,
+    "use_amp": true,
+    "feature_noise_std": 0.1104,
+    "mixup_alpha": 0.0626
+  }
+}

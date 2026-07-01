@@ -1,0 +1,31 @@
+{
+  "preprocess": {
+    "num_encoder": "quantile",
+    "cat_encoder": "onehot"
+  },
+  "arch": {
+    "family": "mlp",
+    "hidden_dims": [
+      798,
+      1024
+    ],
+    "activation": "relu",
+    "dropout": 0.514,
+    "normalization": "none",
+    "embedding_dim": 28
+  },
+  "train": {
+    "optimizer": "adam",
+    "lr": 1e-05,
+    "weight_decay": 0.001881,
+    "scheduler": "none",
+    "batch_size": 256,
+    "epochs": 134,
+    "patience": 10,
+    "label_smoothing": 0.0546,
+    "grad_clip": 2.428,
+    "use_amp": true,
+    "feature_noise_std": 0.1338,
+    "mixup_alpha": 0.3193
+  }
+}

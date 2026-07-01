@@ -1,0 +1,35 @@
+{
+  "openml_id": 1590,
+  "name": "adult",
+  "n_rows": 48842,
+  "n_features": 14,
+  "n_num": 6,
+  "n_cat": 8,
+  "task": "binary",
+  "n_classes": 2,
+  "n_train": 31258,
+  "n_val": 7815,
+  "n_test": 9769,
+  "num_cols_preview": [
+    "age",
+    "fnlwgt",
+    "education-num",
+    "capital-gain",
+    "capital-loss",
+    "hours-per-week"
+  ],
+  "cat_cols_preview": [
+    "workclass",
+    "education",
+    "marital-status",
+    "occupation",
+    "relationship",
+    "race",
+    "sex",
+    "native-country"
+  ],
+  "class_balance": {
+    "0": 23779,
+    "1": 7479
+  }
+}

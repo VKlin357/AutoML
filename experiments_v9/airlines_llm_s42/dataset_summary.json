@@ -1,0 +1,145 @@
+{
+  "openml_id": 1169,
+  "name": "airlines",
+  "n_rows": 539383,
+  "n_features": 7,
+  "n_num": 3,
+  "n_cat": 4,
+  "task": "multiclass",
+  "n_classes": 2,
+  "n_train": 345204,
+  "n_val": 86302,
+  "n_test": 107877,
+  "num_cols_preview": [
+    "Flight",
+    "Time",
+    "Length"
+  ],
+  "cat_cols_preview": [
+    "Airline",
+    "AirportFrom",
+    "AirportTo",
+    "DayOfWeek"
+  ],
+  "class_balance": {
+    "0": 191436,
+    "1": 153768
+  },
+  "feature_stats": {
+    "Flight": {
+      "mean": 2429.9749,
+      "std": 2067.031,
+      "min": 1.0,
+      "max": 7814.0,
+      "median": 1812.0
+    },
+    "Time": {
+      "mean": 802.2969,
+      "std": 277.9628,
+      "min": 10.0,
+      "max": 1439.0,
+      "median": 795.0
+    },
+    "Length": {
+      "mean": 132.1579,
+      "std": 70.0785,
+      "min": 0.0,
+      "max": 655.0,
+      "median": 115.0
+    }
+  },
+  "categorical_stats": {
+    "Airline": {
+      "n_unique": 18,
+      "top5": {
+        "WN": 60257,
+        "DL": 39025,
+        "OO": 32195,
+        "AA": 29284,
+        "MQ": 23423
+      }
+    },
+    "AirportFrom": {
+      "n_unique": 293,
+      "top5": {
+        "ATL": 22156,
+        "ORD": 15901,
+        "DFW": 14117,
+        "DEN": 12736,
+        "LAX": 10663
+      }
+    },
+    "AirportTo": {
+      "n_unique": 293,
+      "top5": {
+        "ATL": 21932,
+        "ORD": 15913,
+        "DFW": 14315,
+        "DEN": 12688,
+        "LAX": 10503
+      }
+    },
+    "DayOfWeek": {
+      "n_unique": 7,
+      "top5": {
+        "4": 58511,
+        "3": 57462,
+        "5": 54632,
+        "1": 46673,
+        "2": 45631
+      }
+    }
+  },
+  "class_distribution": {
+    "0": 0.5546,
+    "1": 0.4454
+  },
+  "class_imbalance_ratio": 1.24,
+  "sample_rows": [
+    {
+      "Airline": "FL",
+      "Flight": 994.0,
+      "AirportFrom": "BOS",
+      "AirportTo": "MKE",
+      "DayOfWeek": "4",
+      "Time": 1055.0,
+      "Length": 160.0
+    },
+    {
+      "Airline": "AS",
+      "Flight": 872.0,
+      "AirportFrom": "ANC",
+      "AirportTo": "OGG",
+      "DayOfWeek": "1",
+      "Time": 610.0,
+      "Length": 368.0
+    },
+    {
+      "Airline": "US",
+      "Flight": 145.0,
+      "AirportFrom": "SNA",
+      "AirportTo": "PHX",
+      "DayOfWeek": "3",
+      "Time": 765.0,
+      "Length": 76.0
+    },
+    {
+      "Airline": "DL",
+      "Flight": 1995.0,
+      "AirportFrom": "SLC",
+      "AirportTo": "SAN",
+      "DayOfWeek": "5",
+      "Time": 1205.0,
+      "Length": 117.0
+    },
+    {
+      "Airline": "OO",
+      "Flight": 6871.0,
+      "AirportFrom": "MOT",
+      "AirportTo": "DEN",
+      "DayOfWeek": "3",
+      "Time": 948.0,
+      "Length": 97.0
+    }
+  ]
+}

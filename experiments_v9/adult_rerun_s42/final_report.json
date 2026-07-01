@@ -1,0 +1,277 @@
+{
+  "dataset": {
+    "openml_id": 1590,
+    "name": "adult",
+    "n_rows": 48842,
+    "n_features": 14,
+    "n_num": 6,
+    "n_cat": 8,
+    "task": "binary",
+    "n_classes": 2,
+    "n_train": 31258,
+    "n_val": 7815,
+    "n_test": 9769,
+    "num_cols_preview": [
+      "age",
+      "fnlwgt",
+      "education-num",
+      "capital-gain",
+      "capital-loss",
+      "hours-per-week"
+    ],
+    "cat_cols_preview": [
+      "workclass",
+      "education",
+      "marital-status",
+      "occupation",
+      "relationship",
+      "race",
+      "sex",
+      "native-country"
+    ],
+    "class_balance": {
+      "0": 23779,
+      "1": 7479
+    },
+    "feature_stats": {
+      "age": {
+        "mean": 38.6864,
+        "std": 13.7325,
+        "min": 17.0,
+        "max": 90.0,
+        "median": 37.0
+      },
+      "fnlwgt": {
+        "mean": 189725.9467,
+        "std": 104403.721,
+        "min": 12285.0,
+        "max": 1455435.0,
+        "median": 178288.5
+      },
+      "education-num": {
+        "mean": 10.0822,
+        "std": 2.5769,
+        "min": 1.0,
+        "max": 16.0,
+        "median": 10.0
+      },
+      "capital-gain": {
+        "mean": 1048.7924,
+        "std": 7261.3923,
+        "min": 0.0,
+        "max": 99999.0,
+        "median": 0.0
+      },
+      "capital-loss": {
+        "mean": 89.3055,
+        "std": 407.1958,
+        "min": 0.0,
+        "max": 4356.0,
+        "median": 0.0
+      },
+      "hours-per-week": {
+        "mean": 40.5283,
+        "std": 12.4185,
+        "min": 1.0,
+        "max": 99.0,
+        "median": 40.0
+      }
+    },
+    "categorical_stats": {
+      "workclass": {
+        "n_unique": 9,
+        "top5": {
+          "Private": 21658,
+          "Self-emp-not-inc": 2457,
+          "Local-gov": 2051,
+          "nan": 1811,
+          "State-gov": 1240
+        }
+      },
+      "education": {
+        "n_unique": 16,
+        "top5": {
+          "HS-grad": 10157,
+          "Some-college": 6899,
+          "Bachelors": 5103,
+          "Masters": 1765,
+          "Assoc-voc": 1293
+        }
+      },
+      "marital-status": {
+        "n_unique": 7,
+        "top5": {
+          "Married-civ-spouse": 14264,
+          "Never-married": 10299,
+          "Divorced": 4284,
+          "Separated": 1010,
+          "Widowed": 972
+        }
+      },
+      "occupation": {
+        "n_unique": 15,
+        "top5": {
+          "Prof-specialty": 3987,
+          "Craft-repair": 3933,
+          "Exec-managerial": 3927,
+          "Adm-clerical": 3568,
+          "Sales": 3497
+        }
+      },
+      "relationship": {
+        "n_unique": 6,
+        "top5": {
+          "Husband": 12581,
+          "Not-in-family": 8109,
+          "Own-child": 4788,
+          "Unmarried": 3331,
+          "Wife": 1481
+        }
+      },
+      "race": {
+        "n_unique": 5,
+        "top5": {
+          "White": 26754,
+          "Black": 2970,
+          "Asian-Pac-Islander": 973,
+          "Amer-Indian-Eskimo": 302,
+          "Other": 259
+        }
+      },
+      "sex": {
+        "n_unique": 2,
+        "top5": {
+          "Male": 20918,
+          "Female": 10340
+        }
+      },
+      "native-country": {
+        "n_unique": 42,
+        "top5": {
+          "United-States": 28058,
+          "Mexico": 613,
+          "nan": 531,
+          "Philippines": 206,
+          "Germany": 133
+        }
+      }
+    },
+    "class_distribution": {
+      "0": 0.7607,
+      "1": 0.2393
+    },
+    "class_imbalance_ratio": 3.18,
+    "sample_rows": [
+      {
+        "age": 48,
+        "workclass": "Self-emp-not-inc",
+        "fnlwgt": 160724.0,
+        "education": "Bachelors",
+        "education-num": 13,
+        "marital-status": "Married-civ-spouse",
+        "occupation": "Exec-managerial",
+        "relationship": "Husband",
+        "race": "Asian-Pac-Islander",
+        "sex": "Male",
+        "capital-gain": 0.0,
+        "capital-loss": 0.0,
+        "hours-per-week": 40,
+        "native-country": "Japan"
+      },
+      {
+        "age": 63,
+        "workclass": "Self-emp-inc",
+        "fnlwgt": 215833.0,
+        "education": "HS-grad",
+        "education-num": 9,
+        "marital-status": "Married-civ-spouse",
+        "occupation": "Exec-managerial",
+        "relationship": "Husband",
+        "race": "White",
+        "sex": "Male",
+        "capital-gain": 0.0,
+        "capital-loss": 0.0,
+        "hours-per-week": 40,
+        "native-country": "United-States"
+      },
+      {
+        "age": 48,
+        "workclass": "Private",
+        "fnlwgt": 194526.0,
+        "education": "Some-college",
+        "education-num": 10,
+        "marital-status": "Married-civ-spouse",
+        "occupation": "Sales",
+        "relationship": "Wife",
+        "race": "White",
+        "sex": "Female",
+        "capital-gain": 0.0,
+        "capital-loss": 0.0,
+        "hours-per-week": 40,
+        "native-country": "United-States"
+      },
+      {
+        "age": 41,
+        "workclass": "Self-emp-inc",
+        "fnlwgt": 117721.0,
+        "education": "Some-college",
+        "education-num": 10,
+        "marital-status": "Married-civ-spouse",
+        "occupation": "Farming-fishing",
+        "relationship": "Husband",
+        "race": "White",
+        "sex": "Male",
+        "capital-gain": 0.0,
+        "capital-loss": 0.0,
+        "hours-per-week": 65,
+        "native-country": "United-States"
+      },
+      {
+        "age": 20,
+        "workclass": "Private",
+        "fnlwgt": 53878.0,
+        "education": "HS-grad",
+        "education-num": 9,
+        "marital-status": "Never-married",
+        "occupation": "Craft-repair",
+        "relationship": "Unmarried",
+        "race": "White",
+        "sex": "Male",
+        "capital-gain": 0.0,
+        "capital-loss": 0.0,
+        "hours-per-week": 40,
+        "native-country": "United-States"
+      }
+    ]
+  },
+  "mode": "batch",
+  "seed": 42,
+  "n_trials": 40,
+  "n_full_trials": 31,
+  "best_primary": 0.917528683160702,
+  "validation_best_primary": 0.917528683160702,
+  "best_primary_trial_id": 20,
+  "best_primary_family": "tabm",
+  "best_search_score": 0.9127864348589666,
+  "best_search_trial_id": 20,
+  "selected_single_test": {
+    "test_primary": 0.9152392199279853,
+    "val_primary": 0.917528683160702,
+    "test_metrics": {
+      "auc": 0.9152392199279853,
+      "auc_defined": true,
+      "logloss": 0.3173349094982065,
+      "acc": 0.8495240045040434,
+      "balanced_acc": 0.8134397909297042,
+      "search_score": 0.9102616601542863,
+      "primary": 0.9152392199279853
+    },
+    "evaluation_split": "test",
+    "selection_split": "validation"
+  },
+  "test_primary": 0.9152392199279853,
+  "evaluation_protocol": "select_on_validation_report_on_test",
+  "best_ensemble": null,
+  "ensemble_k": null,
+  "ensemble": {}
+}

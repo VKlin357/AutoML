@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install lightweight tooling
+        run: pip install ruff pytest
+
+      - name: Lint (error-level only, maintained code)
+        run: ruff check --select E9,F63,F7,F82 src scripts tests
+
+      - name: Byte-compile core modules
+        run: python -m compileall -q scripts/build_results_table.py src/metrics.py src/ensemble.py
+
+      - name: Regenerate results tables from committed logs
+        run: python scripts/build_results_table.py
+
+      - name: Smoke tests
+        run: pytest tests/ -q

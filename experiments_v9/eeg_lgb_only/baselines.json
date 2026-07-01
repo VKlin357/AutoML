@@ -1,0 +1,62 @@
+{
+  "catboost": {
+    "primary": 0.9906340417770912,
+    "auc": 0.9906340417770912,
+    "auc_defined": true,
+    "logloss": 0.118009956312887,
+    "acc": 0.9596128170894526,
+    "balanced_acc": 0.9590148135972566,
+    "search_score": 0.9894240420393525,
+    "test_primary": 0.9906340417770912,
+    "test_metrics": {
+      "auc": 0.9906340417770912,
+      "auc_defined": true,
+      "logloss": 0.118009956312887,
+      "acc": 0.9596128170894526,
+      "balanced_acc": 0.9590148135972566,
+      "search_score": 0.9894240420393525
+    },
+    "val_primary": 0.9915540778220847,
+    "val_metrics": {
+      "auc": 0.9915540778220847,
+      "auc_defined": true,
+      "logloss": 0.11635117977671525,
+      "acc": 0.9578639966624948,
+      "balanced_acc": 0.9570313269489994,
+      "search_score": 0.9903489325386428
+    },
+    "evaluation_split": "test",
+    "early_stopping_split": "validation",
+    "seconds": 9.12362289428711
+  },
+  "lightgbm": {
+    "primary": 0.9865509018979147,
+    "auc": 0.9865509018979147,
+    "auc_defined": true,
+    "logloss": 0.14447384660807666,
+    "acc": 0.945260347129506,
+    "balanced_acc": 0.9442698916281447,
+    "search_score": 0.9850566406567659,
+    "test_primary": 0.9865509018979147,
+    "test_metrics": {
+      "auc": 0.9865509018979147,
+      "auc_defined": true,
+      "logloss": 0.14447384660807666,
+      "acc": 0.945260347129506,
+      "balanced_acc": 0.9442698916281447,
+      "search_score": 0.9850566406567659
+    },
+    "val_primary": 0.9876339879949008,
+    "val_metrics": {
+      "auc": 0.9876339879949008,
+      "auc_defined": true,
+      "logloss": 0.1407516260739006,
+      "acc": 0.9461827284105131,
+      "balanced_acc": 0.9452267348437733,
+      "search_score": 0.9861786720558248
+    },
+    "evaluation_split": "test",
+    "early_stopping_split": "validation",
+    "seconds": 40.1479926109314
+  }
+}

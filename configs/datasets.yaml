@@ -1,0 +1,37 @@
+# Benchmark registry. The `benchmark` block is what the reported results use.
+# The `extensions` block lists additional domains the same pipeline supports —
+# add an OpenML id and run; baselines run offline, LLM-NAS needs OPENAI_API_KEY.
+
+benchmark:
+  classic_tabular:            # RTDL / OpenML
+    - {name: adult,      openml_id: 1590,  task: binary}
+    - {name: helena,     openml_id: 41169, task: multiclass}   # 100 classes
+    - {name: jannis,     openml_id: 41168, task: multiclass}
+    - {name: miniboone,  openml_id: 41150, task: binary}
+    - {name: volkert,    openml_id: 41166, task: multiclass}
+  sensor_highdim:             # activity / signal recognition
+    - {name: har,    task: multiclass}
+    - {name: harth,  task: multiclass, note: "6.46M raw readings"}
+    - {name: pamap2, task: multiclass, note: "3.85M raw readings"}
+    - {name: eeg,    task: binary}
+  forecasting:                # multivariate time series (1 channel, 1 step ahead)
+    - {name: etth1}
+    - {name: etth2}
+    - {name: ettm1}
+    - {name: ettm2}
+    - {name: electricity}
+    - {name: exchange}
+    - {name: traffic}
+
+# Candidate extensions — new domains the pipeline already supports.
+# Fill in a verified OpenML id (python -c "import openml; ...") and run:
+#   python scripts/run_baselines.py --openml_id <id> --out_dir outputs/<name>_baselines
+#   python scripts/run_llm_nas.py  --openml_id <id> --out_dir outputs/<name>_llm --budget 40
+extensions:
+  finance_credit:
+    - {name: credit-g,        openml_id: 31}     # German credit risk
+    - {name: bank-marketing,  openml_id: 1461}
+  healthcare:
+    - {name: diabetes,        openml_id: 37}
+  physics:
+    - {name: magic-telescope, openml_id: 1120}

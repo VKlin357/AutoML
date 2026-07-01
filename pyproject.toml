@@ -1,0 +1,15 @@
+[project]
+name = "llm-tabular-nas"
+version = "1.0.0"
+description = "LLM-guided Neural Architecture Search for tabular and time-series data"
+authors = [{ name = "Vadim Palysaev" }]
+requires-python = ">=3.10"
+license = { text = "MIT" }
+readme = "README.md"
+
+[tool.ruff]
+line-length = 120
+extend-exclude = ["experiments*", "notebooks", "session-export-*", "github_release", "*.ipynb"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

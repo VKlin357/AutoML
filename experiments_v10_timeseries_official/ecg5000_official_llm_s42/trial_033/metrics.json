@@ -1,0 +1,11 @@
+{
+  "acc": 0.94,
+  "balanced_acc": 0.5,
+  "macro_f1": 0.38585585585585586,
+  "logloss": 0.2677039404497268,
+  "search_score": 0.8642772336860468,
+  "primary": 0.94,
+  "rung": "medium_pruned",
+  "cheap_primary": 0.87,
+  "cheap_search_score": 0.7953746484098655
+}

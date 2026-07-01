@@ -1,0 +1,29 @@
+{
+  "preprocess": {
+    "num_encoder": "quantile",
+    "cat_encoder": "embedding"
+  },
+  "arch": {
+    "family": "gated_tab",
+    "n_blocks": 6,
+    "block_width": 240,
+    "dropout": 0.0476,
+    "activation": "leaky_relu",
+    "normalization": "batchnorm",
+    "embedding_dim": 35
+  },
+  "train": {
+    "optimizer": "adam",
+    "lr": 0.000136,
+    "weight_decay": 0.0,
+    "scheduler": "onecycle",
+    "batch_size": 256,
+    "epochs": 82,
+    "patience": 17,
+    "label_smoothing": 0.1094,
+    "grad_clip": 1.948,
+    "use_amp": true,
+    "feature_noise_std": 0.0516,
+    "mixup_alpha": 0.1985
+  }
+}

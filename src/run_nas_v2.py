@@ -27,12 +27,14 @@ The script writes results to out_dir/:
 import argparse
 import os
 import sys
+from pathlib import Path
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
 
 from src.nas_orchestrator import run_llm_nas_v2
+
 
 def main():
     ap = argparse.ArgumentParser(description="LLM-NAS v2 runner")
@@ -91,6 +93,8 @@ def main():
                     help="API key (OpenAI or OpenRouter, default: $OPENAI_API_KEY)")
     ap.add_argument("--base_url", default="",
                     help="Custom API base URL (e.g. https://openrouter.ai/api/v1/chat/completions)")
+    ap.add_argument("--require_llm", action="store_true",
+                    help="Abort if an LLM proposal fails or is invalid; do not silently use random fallback.")
     ap.add_argument("--ensemble_k", type=int, default=0,
                     help="Re-train and ensemble top-K NAS configs at full fidelity (0 = disable)")
     ap.add_argument("--ensemble_only", action="store_true",
@@ -98,9 +102,15 @@ def main():
     ap.add_argument("--device", default=None, help="cuda / cpu (auto-detected if omitted)")
     ap.add_argument("--builtin", default=None,
                     choices=["covtype", "california_housing", "miniboonee",
-                             "ecg5000", "har", "elec2"],
+                             "ecg5000", "har", "harth", "pamap2", "elec2", "emg_gestures",
+                             "etth1", "etth2", "ettm1", "ettm2", "weather", "exchange"],
                     help="Built-in dataset instead of OpenML "
-                         "(covtype / california_housing / miniboonee / ecg5000 / har / elec2)")
+                         "(covtype / california_housing / miniboonee / ecg5000 / har / harth / pamap2 / elec2 / emg_gestures / "
+                         "etth1 / etth2 / ettm1 / ettm2 / weather / exchange)")
+    ap.add_argument("--lookback", type=int, default=96,
+                    help="Lookback window for forecasting datasets (default 96)")
+    ap.add_argument("--horizon", type=int, default=1,
+                    help="Prediction horizon for forecasting datasets (default 1)")
     ap.add_argument("--csv", default=None,
                     help="Path to CSV file (last column = target)")
     ap.add_argument("--resume", action="store_true",
@@ -119,18 +129,48 @@ def main():
         print("ERROR: Set OPENAI_API_KEY env var or pass --api_key sk-proj-...")
         sys.exit(1)
 
-    # Resolve data source
-    source = "openml"
-    builtin_name = None
-    csv_path = None
-    if args.builtin:
-        source = "builtin"
-        builtin_name = args.builtin
-    elif args.csv:
+    # Forecasting datasets → convert to CSV and run as regression
+    FORECASTING_DATASETS = {"etth1", "etth2", "ettm1", "ettm2", "weather", "exchange"}
+
+    if args.builtin and args.builtin in FORECASTING_DATASETS:
+        from src.data_forecasting import load_forecasting_raw
+        import pandas as pd, tempfile
+        print(f"[Forecasting] Loading {args.builtin} (lookback={args.lookback}, horizon={args.horizon}) ...")
+        raw, summary = load_forecasting_raw(
+            args.builtin, lookback=args.lookback, horizon=args.horizon, seed=args.seed
+        )
+        # Save as CSV for NAS pipeline
+        tmp_dir = Path(args.out_dir) / "tmp_forecasting_csv"
+        tmp_dir.mkdir(parents=True, exist_ok=True)
+        n_feat = raw.X_train.shape[1]
+        cols = [f"f{i}" for i in range(n_feat)]
+        for split_name, X, y in [("train", raw.X_train, raw.y_train),
+                                   ("val",   raw.X_val,   raw.y_val),
+                                   ("test",  raw.X_test,  raw.y_test)]:
+            df = pd.DataFrame(X, columns=cols)
+            df["target"] = y
+            df.to_csv(tmp_dir / f"{split_name}.csv", index=False)
+        csv_path = str(tmp_dir / "train.csv")
         source = "csv"
-        csv_path = args.csv
+        builtin_name = None
+        if args.task == "auto":
+            args.task = "regression"
+        print(f"[Forecasting] Converted to CSV: {n_feat} features, "
+              f"train={len(raw.X_train)}, val={len(raw.X_val)}, test={len(raw.X_test)}")
+    else:
+        # Resolve data source
+        source = "openml"
+        builtin_name = None
+        csv_path = None
+        if args.builtin:
+            source = "builtin"
+            builtin_name = args.builtin
+        elif args.csv:
+            source = "csv"
+            csv_path = args.csv
 
     if args.ensemble_only:
+        # Only run ensemble on existing trials — no new LLM calls
         from src.nas_orchestrator import run_ensemble_only
         run_ensemble_only(
             out_dir=args.out_dir,
@@ -174,7 +214,9 @@ def main():
             csv_path=csv_path,
             resume=args.resume,
             extend=args.extend,
+            require_llm=args.require_llm,
         )
+
 
 if __name__ == "__main__":
     main()

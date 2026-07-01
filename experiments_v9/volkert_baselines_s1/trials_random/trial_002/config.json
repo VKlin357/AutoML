@@ -1,0 +1,30 @@
+{
+  "preprocess": {
+    "num_encoder": "quantile",
+    "cat_encoder": "embedding"
+  },
+  "arch": {
+    "family": "autoint",
+    "n_blocks": 4,
+    "d_token": 108,
+    "n_heads": 4,
+    "attn_dropout": 0.1523,
+    "ffn_factor": 2.82,
+    "ffn_dropout": 0.3,
+    "activation": "gelu"
+  },
+  "train": {
+    "optimizer": "sgd_momentum",
+    "lr": 0.008324,
+    "weight_decay": 0.038583,
+    "scheduler": "none",
+    "batch_size": 128,
+    "epochs": 132,
+    "patience": 10,
+    "label_smoothing": 0.1487,
+    "grad_clip": 2.021,
+    "use_amp": false,
+    "feature_noise_std": 0.0734,
+    "mixup_alpha": 0.3531
+  }
+}

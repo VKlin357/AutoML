@@ -1,0 +1,29 @@
+{
+  "openml_id": 44156,
+  "name": "electricity",
+  "n_rows": 38474,
+  "n_features": 8,
+  "n_num": 7,
+  "n_cat": 1,
+  "task": "binary",
+  "n_classes": 2,
+  "n_train": 24623,
+  "n_val": 6156,
+  "n_test": 7695,
+  "num_cols_preview": [
+    "date",
+    "period",
+    "nswprice",
+    "nswdemand",
+    "vicprice",
+    "vicdemand",
+    "transfer"
+  ],
+  "cat_cols_preview": [
+    "day"
+  ],
+  "class_balance": {
+    "0": 12311,
+    "1": 12312
+  }
+}

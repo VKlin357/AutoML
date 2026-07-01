@@ -1,0 +1,29 @@
+{
+  "preprocess": {
+    "num_encoder": "none",
+    "cat_encoder": "embedding"
+  },
+  "arch": {
+    "family": "resmlp",
+    "n_blocks": 5,
+    "block_width": 653,
+    "dropout": 0.3387,
+    "activation": "leaky_relu",
+    "normalization": "layernorm",
+    "embedding_dim": 64
+  },
+  "train": {
+    "optimizer": "sgd_momentum",
+    "lr": 3.9e-05,
+    "weight_decay": 0.006516,
+    "scheduler": "onecycle",
+    "batch_size": 128,
+    "epochs": 188,
+    "patience": 27,
+    "label_smoothing": 0.0603,
+    "grad_clip": 3.421,
+    "use_amp": false,
+    "feature_noise_std": 0.1592,
+    "mixup_alpha": 0.2264
+  }
+}

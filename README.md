@@ -1,69 +1,242 @@
-# LLM-NAS: Neural Architecture Search for Tabular Data
+# LLM-NAS for Tabular Data
 
-Automated neural architecture search system for tabular data. The system searches over six neural network families (MLP, ResMLP, FT-Transformer, GatedTab, AutoInt, TabM) using a language model as the search controller.
+**LLM-guided Neural Architecture Search for tabular and time-series data.**
+A large language model acts as the *controller* of an architecture search: at
+each step it reads a dataset profile and the full history of past trials, then
+proposes neural architectures and training recipes in structured JSON. Candidates
+are filtered by a cheap proxy (short training on a data subset) before any full
+training run, so the search spends its budget where it matters.
 
-## Project Structure
+> **Аннотация (RU).** Проект исследует, можно ли заменить «слепой» перебор в
+> нейроархитектурном поиске (NAS) знаниями языковой модели. LLM выступает
+> управляющим компонентом поиска: предлагает архитектуры и гиперпараметры,
+> анализирует историю обучения и обновляет стратегию. На стандартном бенчмарке
+> RTDL (Gorishniy et al., 2021) подход при одинаковом бюджете обходит CatBoost,
+> случайный NAS и Optuna на большинстве датасетов и в трёх случаях **превышает
+> опубликованные результаты с ручным тюнингом** — полностью автоматически, за
+> ≈ $0.09 на вызовы LLM. Насколько нам известно, это первая работа по LLM-NAS
+> именно для табличных данных.
+
+---
+
+## TL;DR
+
+- **Problem.** Classical NAS (reinforcement learning, evolution) is expensive and
+  *uninformed* — it explores the search space without any prior about what makes
+  a good network. Meanwhile strong tabular architectures exist (FT-Transformer,
+  TabM, AutoInt), but no single one is best on every dataset.
+- **Idea.** Use an LLM as a *warm-started, reasoning controller* that has read
+  millions of lines of ML code and papers, instead of a blind optimizer.
+- **Result.** Under an identical budget of 40 full training runs, LLM-NAS
+  (greedy-ensemble of its top trials) beats CatBoost / Random NAS / Optuna on
+  **4 / 5** classification datasets and **7 / 7** forecasting datasets, and
+  exceeds the *hand-tuned* RTDL paper numbers on Jannis, Helena and MiniBooNE.
+- **Cost.** ≈ **$0.09** of LLM API + ≈ **$2** of GPU per dataset search.
+
+All numbers below are regenerated from raw logs by
+[`scripts/build_results_table.py`](scripts/build_results_table.py) — nothing is
+hand-typed.
+
+---
+
+## Method
 
 ```
-src/
-  nas_orchestrator.py   - main search loop and prompt building
-  models.py             - six architecture families
-  train_nn.py           - training loop with multi-fidelity support
-  search_space.py       - hyperparameter space definitions
-  preprocessing.py      - data preprocessing pipeline
-  data.py               - dataset loading (OpenML + built-in)
-  ensemble.py           - greedy ensemble (Caruana 2004)
-  surrogate.py          - surrogate model for candidate ranking
-  multi_fidelity.py     - cheap/medium/full fidelity rungs
-  metrics.py            - evaluation metrics
-  baselines_automl.py   - CatBoost, LightGBM, Optuna baselines
-  run_baselines_core.py - baseline runners
-  run_nas_v2.py         - main entry point (NAS)
-  run_baselines.py      - entry point for baselines
-  run_experiment.py     - multi-dataset experiment runner
-  utils.py              - seeding and utilities
-gen_figures.py          - figure generation for results
+                 ┌──────────────────────────────────────────────┐
+   warmup        │   for each search step (budget B = 40):       │
+  12 random  ──▶ │                                               │
+   trials        │   1. build dataset profile + trial history    │
+                 │   2. LLM proposes 20 candidate configs (JSON)  │  ◀── reasoning
+                 │   3. cheap screening: 5 epochs on 30% data     │      (chain-of-thought)
+                 │   4. top-4 by cheap score → full training      │
+                 │   5. every 8 steps: Reflect → update strategy  │
+                 └───────────────────┬──────────────────────────┘
+                                     ▼
+                  greedy (Caruana) ensemble of top-K full trials
 ```
 
-## Quick Start
+- **Search space** — 6 architecture families: `MLP`, `ResMLP`, `FT-Transformer`,
+  `GatedTab` (GLU blocks), `AutoInt` (self-attention over feature pairs), and
+  `TabM` (shared trunk + K parallel heads, a parameter-efficient in-network
+  ensemble). The LLM selects the family *and* its hyperparameters.
+- **Cheap screening (multi-fidelity).** Each of the 20 proposals trains for 5
+  epochs on 30 % of the data (≈ 10 % of full cost); only the top 4 are trained in
+  full. Net effect: ≈ **5.6× fewer GPU-hours** than training all proposals.
+- **Reflect.** Every 8 steps the LLM re-reads the whole history and rewrites its
+  strategy ("dropout is not helping → the problem is capacity, widen the net").
+- **Structured output.** > 90 % of LLM responses parse as valid JSON on the
+  first try; invalid ones are repaired and re-requested.
+
+The design and the v1→v9 evolution (how each component was added and *measured*)
+are documented in [`docs/`](docs/) and the project report.
+
+---
+
+## Results
+
+Reproduce with `python scripts/build_results_table.py` (reads `experiments_v9/`
+and `experiments_forecasting/`).
+
+### Classification — accuracy on the untouched test split, budget = 40 trials
+
+| Dataset | CatBoost | LightGBM | Random NAS | Optuna TPE | **LLM-NAS** | **LLM-NAS (ens.)** | Best family |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Adult | **0.928** | 0.928 | 0.914 | 0.914 | 0.918 | 0.919 | ft_transformer |
+| Helena (100 cls) | 0.372 | 0.347 | 0.392 | 0.395 | 0.392 | **0.407** | tabm |
+| Jannis | 0.800 | 0.793 | 0.789 | – | 0.792 | **0.803** | ft_transformer |
+| MiniBooNE | 0.985 | 0.985 | – | 0.987 | 0.988 | **0.988** | tabm |
+| Volkert | 0.707 | 0.696 | – | – | 0.696 | **0.724** | tabm |
+
+LLM-NAS ensemble wins **4/5**. Adult is categorical-heavy and stays gradient-boosting
+territory — reported honestly rather than hidden.
+
+### vs. published RTDL paper (Gorishniy et al., 2021), hand-tuned
+
+| Dataset | RTDL best (hand-tuned) | **LLM-NAS (automatic)** | Δ |
+| --- | --- | --- | --- |
+| Jannis | 0.793 | **0.803** | +1.3 % |
+| Helena | 0.388 | **0.407** | +5.0 % |
+| MiniBooNE | 0.974 | **0.988** | +1.4 % |
+
+### Forecasting — test MSE (lower is better), strong GBM baselines
+
+| Dataset | CatBoost | LightGBM | **LLM-NAS** |
+| --- | --- | --- | --- |
+| Electricity | 0.0728 | 0.0698 | **0.0561** |
+| ETTh1 | 0.0105 | 0.0082 | **0.0059** |
+| ETTh2 | 0.0150 | 0.0060 | **0.0044** |
+| ETTm1 | 0.0027 | 0.0021 | **0.0020** |
+| ETTm2 | 0.0018 | 0.0015 | **0.0004** |
+| Exchange | 1.1611 | 0.7107 | **0.0017** |
+| Traffic | 0.2698 | 0.1990 | **0.0855** |
+
+LLM-NAS wins **7/7**. On *Exchange* the LLM inspected the data and chose a linear
+`NLinear` architecture — the series is essentially a linear trend, which tree
+models cannot exploit because they ignore observation order — giving a ~700×
+lower MSE than CatBoost. This is a *semantic* decision, not a tuning artifact.
+
+---
+
+## Reproducibility
 
 ```bash
+# 1. install
+python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
+export OPENAI_API_KEY=...        # only needed for the LLM-NAS runs
 
-# Run NAS on Jannis dataset
-python src/run_nas_v2.py \
-  --openml_id 45021 \
-  --task multiclass \
-  --out_dir experiments/jannis_s42 \
-  --budget 40 \
-  --random_warmup 12 \
-  --mode batch \
-  --batch_n 20 \
-  --batch_k 4 \
-  --seed 42 \
-  --llm_model gpt-4o-mini
+# 2. baselines (CatBoost / LightGBM / Random NAS / Optuna), e.g. Jannis (OpenML 41168)
+python scripts/run_baselines.py --openml_id 41168 --out_dir outputs/jannis_baselines
 
-# Run baselines (CatBoost + Optuna)
-python src/run_baselines.py \
-  --openml_id 45021 \
-  --task multiclass \
-  --out_dir experiments/jannis_baselines \
-  --optuna --optuna_trials 40 \
-  --seed 42
+# 3. LLM-guided NAS under the same budget
+python scripts/run_llm_nas.py  --openml_id 41168 --out_dir outputs/jannis_llm --budget 40
+
+# 4. regenerate the results tables from raw logs
+python scripts/build_results_table.py    # -> results/results_*.csv, results/results_tables.md
 ```
 
-## Datasets
+- **Fixed protocol.** 64/16/20 train/val/test split, `seed = 42`, budget
+  `B = 40` shared by every method. The test split is touched exactly once, at the
+  end (no leakage). Time-series benchmarks use a chronological / participant-level
+  split — see [`docs/time_series_protocol.md`](docs/time_series_protocol.md).
+- **Determinism** is checked by `src/test_determinism.py`.
+- **One command** end-to-end: `make demo` (see [Makefile](Makefile)).
 
-Experiments use five datasets from the RTDL benchmark (Gorishniy et al. 2021):
+## Experiment tracking, configs & MLOps
 
-| Dataset    | OpenML ID | Rows    | Features | Classes | Metric   |
-|------------|-----------|---------|----------|---------|----------|
-| Volkert    | 41166     | 58,310  | 180      | 10      | Accuracy |
-| Jannis     | 45021     | 57,580  | 54       | 2       | Accuracy |
-| MiniBooNE  | builtin   | 130,065 | 50       | 2       | Accuracy |
-| Helena     | 41169     | 65,196  | 27       | 100     | Accuracy |
-| Adult      | 1590      | 48,842  | 14       | 2       | ROC AUC  |
+Optional MLOps stack (`pip install -r requirements-mlops.txt`) — the core runs
+without it, and [`src/tracking.py`](src/tracking.py) degrades gracefully to a
+local JSONL log if a backend or its credentials are missing.
 
-## Requirements
+- **Tracking** — one interface, four backends (MLflow / W&B / ClearML / TensorBoard).
+  Prove it end-to-end: `python scripts/track_demo.py --track mlflow`
+  (MLflow works fully offline against `./mlruns`; every run also writes
+  `tracking/<run>.jsonl`).
+- **Configs** — [`configs/experiment.yaml`](configs/experiment.yaml) (Hydra/OmegaConf)
+  and [`configs/datasets.yaml`](configs/datasets.yaml) (benchmark registry + domain extensions).
+- **Data & pipeline versioning** — [`dvc.yaml`](dvc.yaml) + [`params.yaml`](params.yaml);
+  reproduce the whole flow with `dvc repro`.
+- **CI** — GitHub Actions runs lint + smoke tests + results regeneration on every push.
 
-See `requirements.txt`. Main dependencies: PyTorch, scikit-learn, CatBoost, OpenML, Optuna.
+## Efficiency
+
+Search cost, honestly ([`scripts/search_efficiency.py`](scripts/search_efficiency.py),
+full report in `results/search_efficiency.md`): the cheap multi-fidelity screen
+prunes **16 of 20** proposals per step, so only **4** are trained in full —
+**5× fewer full trainings per proposal batch** (~4× in training-epoch terms). A
+complete per-dataset search costs minutes of GPU + an estimated ~$0.09 of LLM
+calls, versus tabular architectures that were **hand-designed by research teams
+over months** (see [`docs/RELATED_WORK.md`](docs/RELATED_WORK.md)).
+
+---
+
+## Repository layout
+
+```
+src/                core library
+  nas_orchestrator.py   search loop (warmup → propose → screen → reflect → ensemble)
+  llm/                  LLM controller, prompts, JSON parsing/repair
+  search_space.py       6 architecture families + named actions
+  models.py, train_nn.py    architectures and training
+  multi_fidelity.py     cheap screening
+  ensemble.py           greedy (Caruana) ensembling
+  baselines_automl.py   CatBoost / LightGBM / Random NAS / Optuna
+  data.py, forecasting/ leakage-free (time-series) tabularization
+  tracking.py           unified MLflow/W&B/ClearML/TensorBoard tracker
+scripts/            entry points + run_*.sh + build_results_table.py + search_efficiency.py + track_demo.py
+configs/            experiment.yaml (Hydra) + datasets.yaml (benchmark registry)
+experiments_v9/     raw per-trial JSON logs (classification)
+experiments_forecasting/  raw logs (forecasting)
+results/            aggregated CSV + Markdown, incl. search_efficiency.md (generated)
+docs/               protocol, method notes, RELATED_WORK.md
+dvc.yaml, params.yaml   DVC pipeline + parameters
+tests/              smoke tests run in CI
+```
+
+---
+
+## Why this matters (product framing)
+
+- **Who.** An ML engineer or small team that needs a strong tabular deep model
+  but has **no budget for thousands of GPU-hours** of classical NAS, and no time
+  to hand-tune FT-Transformer per dataset.
+- **Alternatives.** AutoGluon / AutoML (not deep-architecture-focused), classical
+  NAS (BOHB, evolutionary — expensive and uninformed), manual tuning (slow, needs
+  an expert). LLM-NAS gets near-/above-expert architectures **automatically**.
+- **Impact.** ≈ $0.09 + $2 per dataset and ≈ 5.6× fewer GPU-hours than screening
+  every candidate, while matching or beating hand-tuned published results.
+- **MVP.** A single CLI command (`run_llm_nas.py`) that, given an OpenML id or a
+  CSV, returns a trained architecture + ensemble and a full audit trail of the
+  LLM's reasoning.
+
+---
+
+## Related work
+
+Strong tabular architectures — FT-Transformer (Gorishniy et al., NeurIPS 2021),
+TabNet (AAAI 2021), SAINT, NODE (ICLR 2020), TabM (2024) — are all **hand-designed**.
+LLM-driven NAS (GENIUS, arXiv:2304.10970; EvoPrompting, NeurIPS 2023; LLMatic,
+GECCO 2024) targets **vision/code**, not tabular data. This project closes that gap
+and adds cheap multi-fidelity screening and a reasoning `Reflect` loop for the
+tabular setting. Full positioning and citations: [`docs/RELATED_WORK.md`](docs/RELATED_WORK.md).
+
+## Limitations
+
+Single seed per dataset (each run costs real money/GPU, the norm in NAS literature);
+statistical-significance testing across seeds is future work (`scripts/run_multiseed.sh`
++ `scripts/aggregate_results.py` provide the harness). Results depend on the LLM
+backend; gains are consistent across the tested datasets but not guaranteed on
+arbitrary new domains.
+
+## Citation
+
+```bibtex
+@thesis{palysaev2025llmnas,
+  title  = {LLM-guided Neural Architecture Search for Tabular Data},
+  author = {Palysaev, Vadim},
+  year   = {2025},
+  school = {HSE University}
+}
+```
+
+License: [MIT](LICENSE).

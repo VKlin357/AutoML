@@ -36,6 +36,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+
 # ---------------------------------------------------------------------------
 # Building blocks
 # ---------------------------------------------------------------------------
@@ -49,6 +50,7 @@ def _make_act(name: str) -> nn.Module:
         "leaky_relu": nn.LeakyReLU(0.1),
     }.get(name, nn.ReLU())
 
+
 def _make_norm(name: str, dim: int) -> nn.Module:
     if name == "batchnorm":
         return nn.BatchNorm1d(dim)
@@ -56,9 +58,11 @@ def _make_norm(name: str, dim: int) -> nn.Module:
         return nn.LayerNorm(dim)
     return nn.Identity()
 
+
 def _emb_dim(card: int, cap: int) -> int:
     """Per-column embedding dim: ~card^0.25 * 4, capped by cap."""
     return min(cap, max(2, int(round(card ** 0.25 * 4))))
+
 
 class _CatEmbeddings(nn.Module):
     """Concatenated per-column embeddings -> [B, sum(emb_dims)]."""
@@ -75,6 +79,7 @@ class _CatEmbeddings(nn.Module):
         if self.n_cat == 0:
             return x_cat.new_zeros((x_cat.shape[0], 0), dtype=torch.float32)
         return torch.cat([emb(x_cat[:, i]) for i, emb in enumerate(self.embeddings)], dim=1)
+
 
 # ---------------------------------------------------------------------------
 # 1) TabularMLP
@@ -111,6 +116,7 @@ class TabularMLP(nn.Module):
         x = torch.cat([x_num, self.cat_emb(x_cat)], dim=1) if self.cat_emb.n_cat else x_num
         return self.net(x)
 
+
 # ---------------------------------------------------------------------------
 # 2) ResMLP — residual MLP with pre-norm
 # ---------------------------------------------------------------------------
@@ -131,6 +137,7 @@ class _ResBlock(nn.Module):
         h = self.dropout(h)
         h = self.fc2(h)
         return x + h
+
 
 class ResMLP(nn.Module):
     def __init__(
@@ -163,6 +170,7 @@ class ResMLP(nn.Module):
         h = self.out_norm(h)
         return self.head(h)
 
+
 # ---------------------------------------------------------------------------
 # 3) GatedTab — GLU-style gated MLP (a la Gated Linear Units)
 # ---------------------------------------------------------------------------
@@ -184,6 +192,7 @@ class _GatedBlock(nn.Module):
         h = self.dropout(v * g)
         h = self.proj(h)
         return x + h
+
 
 class GatedTab(nn.Module):
     def __init__(
@@ -215,6 +224,7 @@ class GatedTab(nn.Module):
             h = blk(h)
         h = self.out_norm(h)
         return self.head(h)
+
 
 # ---------------------------------------------------------------------------
 # Tokenizer for transformer-style models
@@ -258,6 +268,7 @@ class _FeatureTokenizer(nn.Module):
             toks.append(cat_toks)
         return torch.cat(toks, dim=1) if toks else x_num.new_zeros((x_num.shape[0], 0, self.d_token))
 
+
 # ---------------------------------------------------------------------------
 # 4) FT-Transformer
 # ---------------------------------------------------------------------------
@@ -288,6 +299,7 @@ class _FTBlock(nn.Module):
         f = self.ffn(h)
         x = x + self.res_drop2(f)
         return x
+
 
 class FTTransformer(nn.Module):
     def __init__(
@@ -325,6 +337,7 @@ class FTTransformer(nn.Module):
         h = self.norm(x[:, 0])
         return self.head(h)
 
+
 # ---------------------------------------------------------------------------
 # 5) AutoInt (lightweight)
 # ---------------------------------------------------------------------------
@@ -350,6 +363,7 @@ class _AutoIntBlock(nn.Module):
         x = x + a
         h = self.norm2(x)
         return x + self.ffn(h)
+
 
 class AutoInt(nn.Module):
     def __init__(
@@ -381,6 +395,7 @@ class AutoInt(nn.Module):
         toks = self.norm(toks)
         h = toks.mean(dim=1)
         return self.head(h)
+
 
 # ---------------------------------------------------------------------------
 # 6) TabM — shared trunk + K independent heads (parameter-efficient ensemble)
@@ -462,6 +477,7 @@ class TabM(nn.Module):
         logits = torch.stack(logits_list, dim=1)                 # [B, K, out_dim]
         return logits.mean(dim=1)                                # [B, out_dim]
 
+
 # ---------------------------------------------------------------------------
 # Factory + convenience
 # ---------------------------------------------------------------------------
@@ -470,6 +486,7 @@ def output_dim_for_task(task: str, n_classes: int) -> int:
     if task in ("binary", "regression"):
         return 1
     return n_classes  # multiclass
+
 
 def make_model(
     arch_cfg: Dict,
@@ -528,6 +545,7 @@ def make_model(
             normalization=arch_cfg["normalization"], embedding_dim=arch_cfg["embedding_dim"],
         )
     raise ValueError(f"Unknown arch family: {fam}")
+
 
 def count_params(model: nn.Module) -> int:
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
