@@ -140,23 +140,20 @@ python scripts/build_results_table.py    # -> results/results_*.csv, results/res
   end (no leakage). Time-series benchmarks use a chronological / participant-level
   split — see [`docs/time_series_protocol.md`](docs/time_series_protocol.md).
 - **Determinism** is checked by `src/test_determinism.py`.
-- **One command** end-to-end: `make demo` (see [Makefile](Makefile)).
+- **One command** end-to-end: `make demo` (see [Makefile](Makefile)) — runs a full 40-trial search on Jannis; expect ~2 h on a GPU machine plus API cost.
 
-## Experiment tracking, configs & MLOps
+## Experiment tracking, configs & CI
 
-Optional MLOps stack (`pip install -r requirements-mlops.txt`) — the core runs
-without it, and [`src/tracking.py`](src/tracking.py) degrades gracefully to a
-local JSONL log if a backend or its credentials are missing.
+All experiments write a local `tracking/<run>.jsonl` log by default (zero setup).
+[`src/tracking.py`](src/tracking.py) also supports MLflow (offline, against
+`./mlruns`) — set `--track mlflow` or `LLMNAS_TRACKER=mlflow`. W&B and ClearML
+backends are wired in the same interface but require account credentials and are
+not tested end-to-end.
 
-- **Tracking** — one interface, four backends (MLflow / W&B / ClearML / TensorBoard).
-  Prove it end-to-end: `python scripts/track_demo.py --track mlflow`
-  (MLflow works fully offline against `./mlruns`; every run also writes
-  `tracking/<run>.jsonl`).
-- **Configs** — [`configs/experiment.yaml`](configs/experiment.yaml) (Hydra/OmegaConf)
-  and [`configs/datasets.yaml`](configs/datasets.yaml) (benchmark registry + domain extensions).
-- **Data & pipeline versioning** — [`dvc.yaml`](dvc.yaml) + [`params.yaml`](params.yaml);
-  reproduce the whole flow with `dvc repro`.
-- **CI** — GitHub Actions runs lint + smoke tests + results regeneration on every push.
+- **Configs** — [`configs/experiment.yaml`](configs/experiment.yaml) and
+  [`configs/datasets.yaml`](configs/datasets.yaml) (benchmark registry).
+- **Pipeline** — [`dvc.yaml`](dvc.yaml) defines the forecasting experiment flow.
+- **CI** — GitHub Actions runs lint + smoke tests on every push.
 
 ## Efficiency
 
