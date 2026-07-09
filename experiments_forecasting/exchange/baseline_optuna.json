@@ -1,0 +1,91 @@
+{
+  "dataset": "exchange",
+  "n_trials": 40,
+  "completed_trials": 10,
+  "best_val_mse": 0.003163857851177454,
+  "test_mse": 0.0015961169265210629,
+  "test_mae": 0.02721145935356617,
+  "best_config": {
+    "arch": {
+      "family": "nlinear",
+      "individual": false
+    },
+    "train": {
+      "lr": 0.0005,
+      "batch_size": 256,
+      "epochs": 100,
+      "patience": 20,
+      "optimizer": "adam",
+      "weight_decay": 0.001,
+      "scheduler": "none",
+      "grad_clip": 0.0,
+      "use_amp": true
+    }
+  },
+  "trial_log": [
+    {
+      "trial": 0,
+      "family": "nlinear",
+      "val_mse": 0.003247488522902131,
+      "test_mse": 0.0017155547393485904
+    },
+    {
+      "trial": 1,
+      "family": "linear",
+      "val_mse": 0.0034949989058077335,
+      "test_mse": 0.0018313006730750203
+    },
+    {
+      "trial": 2,
+      "family": "patch_mlp",
+      "val_mse": 0.03084443509578705,
+      "test_mse": 0.08875580877065659
+    },
+    {
+      "trial": 3,
+      "family": "nlinear",
+      "val_mse": 0.003163857851177454,
+      "test_mse": 0.0015961169265210629
+    },
+    {
+      "trial": 4,
+      "family": "transformer",
+      "val_mse": 0.12539921700954437,
+      "test_mse": 0.08278724551200867
+    },
+    {
+      "trial": 5,
+      "family": "mlp",
+      "val_mse": 0.5246888995170593,
+      "test_mse": 0.44485223293304443
+    },
+    {
+      "trial": 6,
+      "family": "tcn",
+      "val_mse": 0.007772370241582394,
+      "test_mse": 0.031265176832675934
+    },
+    {
+      "trial": 7,
+      "family": "nlinear",
+      "val_mse": 0.004500607028603554,
+      "test_mse": 0.0022078955080360174
+    },
+    {
+      "trial": 8,
+      "family": "mlp",
+      "val_mse": 0.4612279534339905,
+      "test_mse": 0.4593321979045868
+    },
+    {
+      "trial": 9,
+      "family": "tcn",
+      "val_mse": 0.003627881407737732,
+      "test_mse": 0.01821974851191044
+    }
+  ],
+  "elapsed_seconds": 732.3003232479095,
+  "seed": 42,
+  "lookback": 96,
+  "horizon": 1
+}

@@ -1,0 +1,272 @@
+{
+  "dataset": "etth1",
+  "n_trials": 40,
+  "completed_trials": 40,
+  "best_val_mse": 0.004261773545295,
+  "test_mse": 0.005863890051841736,
+  "test_mae": 0.052543267607688904,
+  "best_config": {
+    "arch": {
+      "family": "linear",
+      "decompose": true,
+      "individual": true
+    },
+    "train": {
+      "lr": 0.0001,
+      "batch_size": 128,
+      "epochs": 150,
+      "patience": 20,
+      "optimizer": "adam",
+      "weight_decay": 0.0,
+      "scheduler": "none",
+      "grad_clip": 1.0,
+      "use_amp": true
+    }
+  },
+  "trial_log": [
+    {
+      "trial": 0,
+      "family": "nlinear",
+      "val_mse": 0.004474162124097347,
+      "test_mse": 0.005991521291434765
+    },
+    {
+      "trial": 1,
+      "family": "linear",
+      "val_mse": 0.004303901456296444,
+      "test_mse": 0.0059297820553183556
+    },
+    {
+      "trial": 2,
+      "family": "patch_mlp",
+      "val_mse": 0.015178641304373741,
+      "test_mse": 0.017611874267458916
+    },
+    {
+      "trial": 3,
+      "family": "nlinear",
+      "val_mse": 0.004289028234779835,
+      "test_mse": 0.005828918889164925
+    },
+    {
+      "trial": 4,
+      "family": "transformer",
+      "val_mse": 0.005951804108917713,
+      "test_mse": 0.00880950503051281
+    },
+    {
+      "trial": 5,
+      "family": "mlp",
+      "val_mse": 0.02686433121562004,
+      "test_mse": 0.03525319695472717
+    },
+    {
+      "trial": 6,
+      "family": "tcn",
+      "val_mse": 0.005355358589440584,
+      "test_mse": 0.0065459744073450565
+    },
+    {
+      "trial": 7,
+      "family": "nlinear",
+      "val_mse": 0.0047027599066495895,
+      "test_mse": 0.00634941877797246
+    },
+    {
+      "trial": 8,
+      "family": "mlp",
+      "val_mse": 0.02181759849190712,
+      "test_mse": 0.016742421314120293
+    },
+    {
+      "trial": 9,
+      "family": "tcn",
+      "val_mse": 0.0049878815189003944,
+      "test_mse": 0.006186766549944878
+    },
+    {
+      "trial": 10,
+      "family": "nlinear",
+      "val_mse": 0.004300884436815977,
+      "test_mse": 0.005827876273542643
+    },
+    {
+      "trial": 11,
+      "family": "nlinear",
+      "val_mse": 0.004299141466617584,
+      "test_mse": 0.005822660867124796
+    },
+    {
+      "trial": 12,
+      "family": "nlinear",
+      "val_mse": 0.004299141466617584,
+      "test_mse": 0.005822660867124796
+    },
+    {
+      "trial": 13,
+      "family": "nlinear",
+      "val_mse": 0.004297206178307533,
+      "test_mse": 0.00583620322868228
+    },
+    {
+      "trial": 14,
+      "family": "linear",
+      "val_mse": 0.004280592314898968,
+      "test_mse": 0.005849645007401705
+    },
+    {
+      "trial": 15,
+      "family": "linear",
+      "val_mse": 0.004469448700547218,
+      "test_mse": 0.006165108643472195
+    },
+    {
+      "trial": 16,
+      "family": "linear",
+      "val_mse": 0.0045386203564703465,
+      "test_mse": 0.006499774754047394
+    },
+    {
+      "trial": 17,
+      "family": "transformer",
+      "val_mse": 0.004797139670699835,
+      "test_mse": 0.006042863707989454
+    },
+    {
+      "trial": 18,
+      "family": "patch_mlp",
+      "val_mse": 0.0062208520248532295,
+      "test_mse": 0.007906418293714523
+    },
+    {
+      "trial": 19,
+      "family": "linear",
+      "val_mse": 0.004284357652068138,
+      "test_mse": 0.005888986401259899
+    },
+    {
+      "trial": 20,
+      "family": "linear",
+      "val_mse": 0.004281800240278244,
+      "test_mse": 0.005970485974103212
+    },
+    {
+      "trial": 21,
+      "family": "linear",
+      "val_mse": 0.0042706988751888275,
+      "test_mse": 0.005919561255723238
+    },
+    {
+      "trial": 22,
+      "family": "linear",
+      "val_mse": 0.0042706988751888275,
+      "test_mse": 0.005919561255723238
+    },
+    {
+      "trial": 23,
+      "family": "linear",
+      "val_mse": 0.0042706988751888275,
+      "test_mse": 0.005919561255723238
+    },
+    {
+      "trial": 24,
+      "family": "linear",
+      "val_mse": 0.0042706988751888275,
+      "test_mse": 0.005919561255723238
+    },
+    {
+      "trial": 25,
+      "family": "linear",
+      "val_mse": 0.004457422066479921,
+      "test_mse": 0.006231554783880711
+    },
+    {
+      "trial": 26,
+      "family": "linear",
+      "val_mse": 0.004719624295830727,
+      "test_mse": 0.00687881326302886
+    },
+    {
+      "trial": 27,
+      "family": "linear",
+      "val_mse": 0.0042706988751888275,
+      "test_mse": 0.005919561255723238
+    },
+    {
+      "trial": 28,
+      "family": "linear",
+      "val_mse": 0.0042706988751888275,
+      "test_mse": 0.005919561255723238
+    },
+    {
+      "trial": 29,
+      "family": "tcn",
+      "val_mse": 0.03175254166126251,
+      "test_mse": 0.022278007119894028
+    },
+    {
+      "trial": 30,
+      "family": "patch_mlp",
+      "val_mse": 0.01659860461950302,
+      "test_mse": 0.015574131160974503
+    },
+    {
+      "trial": 31,
+      "family": "linear",
+      "val_mse": 0.004261773545295,
+      "test_mse": 0.005863890051841736
+    },
+    {
+      "trial": 32,
+      "family": "linear",
+      "val_mse": 0.0042706988751888275,
+      "test_mse": 0.005919561255723238
+    },
+    {
+      "trial": 33,
+      "family": "linear",
+      "val_mse": 0.0042706988751888275,
+      "test_mse": 0.005919561255723238
+    },
+    {
+      "trial": 34,
+      "family": "linear",
+      "val_mse": 0.004281986504793167,
+      "test_mse": 0.00584276532754302
+    },
+    {
+      "trial": 35,
+      "family": "transformer",
+      "val_mse": 0.006246386095881462,
+      "test_mse": 0.00730394572019577
+    },
+    {
+      "trial": 36,
+      "family": "linear",
+      "val_mse": 0.004310105927288532,
+      "test_mse": 0.005946130491793156
+    },
+    {
+      "trial": 37,
+      "family": "mlp",
+      "val_mse": 0.04303311929106712,
+      "test_mse": 0.02099570818245411
+    },
+    {
+      "trial": 38,
+      "family": "patch_mlp",
+      "val_mse": 0.009740001522004604,
+      "test_mse": 0.013703959994018078
+    },
+    {
+      "trial": 39,
+      "family": "linear",
+      "val_mse": 0.004291599616408348,
+      "test_mse": 0.00590799143537879
+    }
+  ],
+  "elapsed_seconds": 4270.921084165573,
+  "seed": 42,
+  "lookback": 96,
+  "horizon": 1
+}

@@ -1,0 +1,18 @@
+{
+  "dataset": "electricity",
+  "n_trials": 40,
+  "completed_trials": 2,
+  "best_val_mse": 0.055366,
+  "test_mse": 0.056284,
+  "test_mae": null,
+  "best_config": {
+    "arch": {
+      "family": "linear"
+    },
+    "train": {}
+  },
+  "note": "manually saved after 2 trials (process killed)",
+  "seed": 42,
+  "lookback": 96,
+  "horizon": 1
+}
