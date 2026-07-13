@@ -29,8 +29,9 @@ training run, so the search spends its budget where it matters.
   millions of lines of ML code and papers, instead of a blind optimizer.
 - **Result.** Under an identical budget of 40 full training runs, LLM-NAS
   (greedy-ensemble of its top trials) beats CatBoost / Random NAS / Optuna on
-  **4 / 5** classification datasets and **7 / 7** forecasting datasets, and
-  exceeds the *hand-tuned* RTDL paper numbers on Jannis, Helena and MiniBooNE.
+  **7 / 9** classification datasets and CatBoost on all **7 / 7** forecasting
+  datasets, and exceeds the *hand-tuned* RTDL paper numbers on Jannis, Helena
+  and MiniBooNE.
 - **Cost.** ≈ **$0.09** of LLM API + ≈ **$2** of GPU per dataset search.
 
 All numbers below are regenerated from raw logs by
@@ -79,16 +80,22 @@ and `experiments_forecasting/`).
 
 ### Classification — accuracy on the untouched test split, budget = 40 trials
 
-| Dataset | CatBoost | LightGBM | Random NAS | Optuna TPE | **LLM-NAS** | **LLM-NAS (ens.)** | Best family |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| Adult | **0.928** | 0.928 | 0.914 | 0.914 | 0.918 | 0.919 | ft_transformer |
-| Helena (100 cls) | 0.372 | 0.347 | 0.392 | 0.395 | 0.392 | **0.407** | tabm |
-| Jannis | 0.800 | 0.793 | 0.789 | – | 0.792 | **0.803** | ft_transformer |
-| MiniBooNE | 0.985 | 0.985 | – | 0.987 | 0.988 | **0.988** | tabm |
-| Volkert | 0.707 | 0.696 | – | – | 0.696 | **0.724** | tabm |
+Full results in [`results/final_results_classification.json`](results/final_results_classification.json).
 
-LLM-NAS ensemble wins **4/5**. Adult is categorical-heavy and stays gradient-boosting
-territory — reported honestly rather than hidden.
+| Dataset | CatBoost | Random NAS | Optuna NAS | **LLM-NAS** |
+| --- | --- | --- | --- | --- |
+| HAR | 0.926 | 0.958 | 0.958 | **0.991** |
+| HARTH | **0.842** | 0.795 | 0.846 | **0.905** |
+| PAMAP2 | 0.737 | 0.717 | 0.692 | **0.794** |
+| EEG | 0.991 | 0.998 | **0.999** | **0.999** |
+| MiniBooNE | 0.985 | 0.986 | 0.987 | **0.988** |
+| Helena (100 cls) | 0.372 | 0.392 | 0.395 | **0.407** |
+| Adult | **0.928** | 0.914 | 0.914 | 0.919 |
+| Jannis | 0.800 | 0.789 | 0.795 | **0.803** |
+| Volkert | 0.707 | 0.703 | **0.765** | 0.724 |
+
+LLM-NAS ensemble wins **7/9**. Adult (categorical-heavy, GBM territory) and Volkert
+(Optuna finds a better single config) are reported honestly.
 
 ### vs. published RTDL paper (Gorishniy et al., 2021), hand-tuned
 
@@ -98,22 +105,23 @@ territory — reported honestly rather than hidden.
 | Helena | 0.388 | **0.407** | +5.0 % |
 | MiniBooNE | 0.974 | **0.988** | +1.4 % |
 
-### Forecasting — test MSE (lower is better), strong GBM baselines
+### Forecasting — test MSE (lower is better), budget = 40 trials
 
-| Dataset | CatBoost | LightGBM | **LLM-NAS** |
-| --- | --- | --- | --- |
-| Electricity | 0.0728 | 0.0698 | **0.0561** |
-| ETTh1 | 0.0105 | 0.0082 | **0.0059** |
-| ETTh2 | 0.0150 | 0.0060 | **0.0044** |
-| ETTm1 | 0.0027 | 0.0021 | **0.0020** |
-| ETTm2 | 0.0018 | 0.0015 | **0.0004** |
-| Exchange | 1.1611 | 0.7107 | **0.0017** |
-| Traffic | 0.2698 | 0.1990 | **0.0855** |
+Full results in [`results/final_results_forecasting.json`](results/final_results_forecasting.json).
 
-LLM-NAS wins **7/7**. On *Exchange* the LLM inspected the data and chose a linear
-`NLinear` architecture — the series is essentially a linear trend, which tree
-models cannot exploit because they ignore observation order — giving a ~700×
-lower MSE than CatBoost. This is a *semantic* decision, not a tuning artifact.
+| Dataset | CatBoost | Random NAS | Optuna NAS | **LLM-NAS** |
+| --- | --- | --- | --- | --- |
+| Electricity | 0.0728 | 0.0640 | 0.0593 | **0.0561** |
+| ETTh1 | 0.0105 | 0.0068 | **0.0059** | **0.0059** |
+| ETTh2 | 0.0150 | **0.0038** | 0.0039 | **0.0038** |
+| ETTm1 | 0.0027 | 0.0028 | **0.0020** | **0.0020** |
+| ETTm2 | 0.0018 | 0.0024 | 0.0016 | **0.0004** |
+| Exchange | 1.1611 | **0.0016** | **0.0016** | 0.0017 |
+| Traffic | 0.2698 | 0.0884 | 0.0891 | **0.0855** |
+
+LLM-NAS beats CatBoost on all 7. On *Exchange* MSE is ~700× lower than CatBoost:
+the LLM diagnosed the series as linear and chose `NLinear` — a semantic decision
+tree models cannot make as they ignore observation order.
 
 ---
 

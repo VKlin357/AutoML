@@ -1,0 +1,19 @@
+{
+  "task": "classification",
+  "metric": "accuracy",
+  "budget": 40,
+  "seed": 42,
+  "split": "64/16/20",
+  "note": "LLM-NAS = greedy Caruana ensemble of top-K trials. HARTH/PAMAP2/HAR numbers from GPU server runs (seed 42). Optuna and Random NAS use same budget B=40.",
+  "results": [
+    {"dataset": "HAR",      "catboost": 0.926, "random_nas": 0.958, "optuna_nas": 0.958, "llm_nas": 0.991},
+    {"dataset": "HARTH",    "catboost": 0.842, "random_nas": 0.795, "optuna_nas": 0.846, "llm_nas": 0.905},
+    {"dataset": "PAMAP2",   "catboost": 0.737, "random_nas": 0.717, "optuna_nas": 0.692, "llm_nas": 0.794},
+    {"dataset": "EEG",      "catboost": 0.991, "random_nas": 0.998, "optuna_nas": 0.999, "llm_nas": 0.999},
+    {"dataset": "MiniBooNE","catboost": 0.985, "random_nas": 0.986, "optuna_nas": 0.987, "llm_nas": 0.988},
+    {"dataset": "Helena",   "catboost": 0.372, "random_nas": 0.392, "optuna_nas": 0.395, "llm_nas": 0.407},
+    {"dataset": "Adult",    "catboost": 0.928, "random_nas": 0.914, "optuna_nas": 0.914, "llm_nas": 0.919},
+    {"dataset": "Jannis",   "catboost": 0.800, "random_nas": 0.789, "optuna_nas": 0.795, "llm_nas": 0.803},
+    {"dataset": "Volkert",  "catboost": 0.707, "random_nas": 0.703, "optuna_nas": 0.765, "llm_nas": 0.724}
+  ]
+}
